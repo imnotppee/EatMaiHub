@@ -91,7 +91,7 @@ Software Requirements Specification
 
 6. เทคโนโลยีที่ใช้ (Technologies to be Used)
 
-- **Frontend:** Flutter  
+- **Frontend:** Flet  
 - **Backend:** Python + FastAPI  
 - **Database:** PostgreSQL  
 - **Version Control:** GitHub  
