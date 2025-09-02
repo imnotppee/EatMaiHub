@@ -1,49 +1,31 @@
 import flet as ft
+from login import build_login_view
+from signup import build_signup_view
+from forgot_password import build_forgot_view
 
 def main(page: ft.Page):
-    page.title = "Flet Navigation Demo"
-    page.theme_mode = "light"
+    page.title = "Flet counter example"
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    def route_change(e):
-        page.views.clear()
+    txt_number = ft.TextField(value="0", text_align=ft.TextAlign.RIGHT, width=100)
 
-        # หน้าแรก
-        if page.route == "/":
-            page.views.append(
-                ft.View(
-                    "/",
-                    controls=[
-                        ft.AppBar(title=ft.Text("Home"), bgcolor="blue"),
-                        ft.Text("นี่คือหน้าแรก"),
-                        ft.IconButton(ft.Icons.ARROW_FORWARD, on_click=lambda _: page.go("/second"))
-                    ],
-                )
-            )
-
-        # หน้าที่สอง
-        elif page.route == "/second":
-            page.views.append(
-                ft.View(
-                    "/second",
-                    controls=[
-                        ft.AppBar(title=ft.Text("Second Page"), bgcolor="green"),
-                        ft.Text("หน้านี้คือ Second Page"),
-                        ft.IconButton(ft.Icons.HOME, on_click=lambda _: page.go("/"))
-                    ],
-                )
-            )
-
+    def minus_click(e):
+        txt_number.value = str(int(txt_number.value) - 1)
         page.update()
 
-    # callback เมื่อกดปุ่ม back (เช่นในมือถือ/เว็บ browser)
-    def view_pop(e):
-        page.views.pop()
-        page.go(page.views[-1].route)
+    def plus_click(e):
+        txt_number.value = str(int(txt_number.value) + 1)
+        page.update()
 
-    page.on_route_change = route_change
-    page.on_view_pop = view_pop
+    page.add(
+        ft.Row(
+            [
+                ft.IconButton(ft.Icons.REMOVE, on_click=minus_click),
+                txt_number,
+                ft.IconButton(ft.Icons.ADD, on_click=plus_click),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+        )
+    )
 
-    # เริ่มต้นไปหน้าแรก
-    page.go(page.route)
-
-ft.app(target=main)
+ft.app(main)
