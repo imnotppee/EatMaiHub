@@ -4,7 +4,6 @@ def main(page: ft.Page):
     page.title = "Flet Navigation Demo"
     page.theme_mode = "light"
 
-    # callback เมื่อมีการเปลี่ยนเส้นทาง (route)
     def route_change(e):
         page.views.clear()
 
