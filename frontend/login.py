@@ -6,22 +6,25 @@ BRAND_BROWN  = "#4D2E1E"
 PHONE_W, PHONE_H = 412, 917
 
 def curved_orange_header():
-    """
-    หัวส้มโค้งแบบภาพ: ใช้ Stack วางพื้นส้ม + วาง 'วงรีสีขาว' ซ้อนทับด้านล่าง
-    ไม่ใช้ Positioned (เวอร์ชันนี้ไม่มี) — ใช้ top/left ของ Container แทน
-    """
+    # หัวส้ม + วงรีขาว 413x103 (สไตล์ Figma)
+    ORANGE_H    = 150
+    ELLIPSE_W   = 413
+    ELLIPSE_H   = 103
+    ELLIPSE_TOP = 110
+    ELLIPSE_LEFT = -1
+
     return ft.Stack(
         width=PHONE_W,
-        height=210,
+        height=ORANGE_H + 60,
         controls=[
-            ft.Container(width=PHONE_W, height=150, bgcolor=BRAND_ORANGE),
-            ft.Container(  # วงรีสีขาวทับเพื่อให้เกิดเส้นโค้ง
-                width=PHONE_W + 80,
-                height=200,
+            ft.Container(width=PHONE_W, height=ORANGE_H, bgcolor=BRAND_ORANGE),
+            ft.Container(
+                width=ELLIPSE_W,
+                height=ELLIPSE_H,
                 bgcolor=Colors.WHITE,
-                border_radius=100,
-                top=110,          # ยิ่งน้อย โค้งยิ่งสูง
-                left=-40,         # ขยายความกว้างให้โค้งกินเต็มขอบ
+                border_radius=ELLIPSE_H // 2,
+                top=ELLIPSE_TOP,
+                left=ELLIPSE_LEFT,
             ),
         ],
     )
@@ -44,7 +47,7 @@ def build_login_view(page: ft.Page) -> ft.View:
         page.update()
 
     def goto_signup(e): page.go("/signup")
-    def goto_forgot(e): page.go("/forgot")
+    def goto_forgot(e): page.go("/reset")  # ✅ ไปหน้า reset ก่อน
 
     def google_login(e):
         page.snack_bar = ft.SnackBar(ft.Text("TODO: Google Sign-In"))
@@ -116,8 +119,21 @@ def build_login_view(page: ft.Page) -> ft.View:
     return ft.View(
         route="/",
         padding=0,
-        bgcolor=Colors.WHITE,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        vertical_alignment=ft.MainAxisAlignment.START,
-        controls=[ft.Row(controls=[content], alignment=ft.MainAxisAlignment.CENTER)],
-    )
+        vertical_alignment=ft.MainAxisAlignment.CENTER,
+        controls=[
+        # พื้นหลังนอกกรอบ = ดำ
+            ft.Container(
+                expand=True,
+                bgcolor=ft.Colors.BLACK,
+                alignment=ft.alignment.center,
+                content=ft.Container(
+                    width=412,
+                    height=917,
+                    bgcolor=ft.Colors.WHITE,   # กรอบมือถือ = ขาว
+                    content=content,
+            ),
+        )
+    ],
+)
+
