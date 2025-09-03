@@ -51,5 +51,5 @@ def main(page: ft.Page):
     page.on_view_pop = view_pop
     page.go(page.route or "/")
 
-# เสิร์ฟ assets (logo.png, google.png ฯลฯ)
+# ให้ Flet เสิร์ฟรูปจากโฟลเดอร์ photo/
 ft.app(main, assets_dir="photo")
