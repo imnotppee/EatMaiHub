@@ -64,18 +64,24 @@ def build_home_view(page: ft.Page) -> ft.View:
     )
 
     # ---------- แถว feature 4 อัน ----------
-    def feature(icon_src: str, label: str):
-        return ft.Container(
-            bgcolor=Colors.WHITE,              # กล่องเล็กพื้นขาว
-            border_radius=12,
-            padding=10,
-            width=(PHONE_W - 64) / 4,
-            shadow=ft.BoxShadow(blur_radius=8, color=Colors.BLACK12),
-            content=ft.Column(
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=6,
-                controls=[ft.Image(src=icon_src, width=32, height=32), ft.Text(label, size=12)],
-            ),
+    def feature(icon_src: str, label: str, on_click=None):
+        return ft.GestureDetector(
+            on_tap=on_click or (lambda e: None),   # ✅ กัน error ถ้าไม่ได้ส่ง handler มา
+            content=ft.Container(
+                bgcolor=Colors.WHITE,
+                border_radius=12,
+                padding=10,
+                width=(PHONE_W - 64) / 4,
+                shadow=ft.BoxShadow(blur_radius=8, color=Colors.BLACK12),
+                content=ft.Column(
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=6,
+                    controls=[
+                        ft.Image(src=icon_src, width=32, height=32),
+                        ft.Text(label, size=12)
+                    ],
+                ),
+            )
         )
 
     feature_row = ft.Row(
@@ -83,7 +89,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         controls=[
             feature("ball.png", "กินตามดวง"),
             feature("pin.png", "ร้านใกล้ฉัน"),
-            feature("Category.png", "หมวดหมู่"),
+            feature("Category.png", "หมวดหมู่", on_click=lambda e: page.go("/categories")),  # ✅ ไปหน้าหมวดหมู่
             feature("palette.png", "กินตามสีวัน"),
         ],
     )

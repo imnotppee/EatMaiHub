@@ -6,21 +6,19 @@ from signup import build_signup_view
 from reset_password import build_reset_view
 from forgot_password import build_forgot_view
 from home import build_home_view
+from categories import categories_view   # ✅ เพิ่ม import หน้า categories
 
 
 def main(page: ft.Page):
     # ---------- window & page look ----------
     page.title = "EATMAIHUB"
 
-    # พื้นหลัง “นอกแอป” ให้ดำ และตัดขอบ/พื้นที่ว่างรอบ ๆ ออก
     page.bgcolor = ft.Colors.BLACK         # พื้นหลังรอบเฟรม
-    page.padding = 0                       # ตัด padding รอบ page
-    page.margin = 0                        # ตัด margin รอบ page
+    page.padding = 0
+    page.margin = 0
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.scroll = ft.ScrollMode.AUTO
-
-    # โหมดสีของคอมโพเนนต์ภายใน ให้เป็นสว่าง (ตัวหนังสือดำ บนพื้นขาว)
     page.theme_mode = ft.ThemeMode.LIGHT
 
     # ขนาดจำลองมือถือ 412x917
@@ -47,6 +45,8 @@ def main(page: ft.Page):
             page.views.append(build_forgot_view(page))
         elif r == "/home":
             page.views.append(build_home_view(page))
+        elif r == "/categories":   # ✅ route ไปหน้า categories
+            page.views.append(categories_view(page))
         else:
             # default = login
             page.views.append(build_login_view(page))
@@ -65,5 +65,5 @@ def main(page: ft.Page):
     page.go(page.route or "/")
 
 
-# เสิร์ฟไฟล์รูปจากโฟลเดอร์ photo (เช่น logo.png, google.png, …)
+# เสิร์ฟไฟล์รูปจากโฟลเดอร์ photo
 ft.app(target=main, assets_dir="photo")
