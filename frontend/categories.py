@@ -5,11 +5,13 @@ import os
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
+
 # โหลด JSON จากไฟล์
 def load_data():
     path = os.path.join(os.path.dirname(__file__), "data", "categories.json")
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def categories_view(page: ft.Page) -> ft.View:
     data = load_data()
@@ -50,16 +52,11 @@ def categories_view(page: ft.Page) -> ft.View:
     )
 
     header = ft.Container(
-        gradient=ft.LinearGradient(
-            begin=ft.alignment.top_center,
-            end=ft.alignment.bottom_center,
-            colors=[BRAND_ORANGE, "#F6D0A0"],
-        ),
-        padding=ft.padding.all(12),
+        padding=ft.padding.only(left=16, right=16, top=12, bottom=16),
         content=ft.Column(spacing=12, controls=[header_row, search]),
     )
 
-    # ---------- Category card function ----------
+    # ---------- Category buttons ----------
     def category_card(img: str, label: str, active=False):
         return ft.Column(
             [
@@ -83,7 +80,6 @@ def categories_view(page: ft.Page) -> ft.View:
             spacing=6,
         )
 
-    # ---------- Category buttons ----------
     category_buttons = ft.Row(
         alignment=ft.MainAxisAlignment.SPACE_AROUND,
         controls=[
@@ -99,15 +95,24 @@ def categories_view(page: ft.Page) -> ft.View:
         food_cards.append(
             ft.Container(
                 bgcolor=ft.Colors.WHITE,
-                border_radius=12,
-                padding=8,
-                shadow=ft.BoxShadow(blur_radius=6, color=ft.Colors.BLACK12),
+                border_radius=16,
+                padding=12,
+                shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK26),
                 content=ft.Row(
+                    alignment=ft.MainAxisAlignment.START,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=12,
                     controls=[
-                        ft.Image(src=f["image"], width=100, height=80, fit=ft.ImageFit.COVER),
+                        ft.Container(
+                            width=120,
+                            height=100,
+                            border_radius=10,
+                            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+                            content=ft.Image(src=f["image"], fit=ft.ImageFit.COVER),
+                        ),
                         ft.Column(
-                            spacing=4,
                             alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=6,
                             controls=[
                                 ft.Text(f"ชื่อร้าน : {f['name']}", size=14, weight="bold"),
                                 ft.Text(f"รีวิว : {f['rating']} ดาว", size=12, color=ft.Colors.BLACK54),
@@ -119,7 +124,7 @@ def categories_view(page: ft.Page) -> ft.View:
             )
         )
 
-    food_list = ft.Column(spacing=10, controls=food_cards)
+    food_list = ft.Column(spacing=12, controls=food_cards)
 
     # ---------- Bottom nav ----------
     def nav_item(icon: str, label: str, active=False, on_click=None):
@@ -156,32 +161,52 @@ def categories_view(page: ft.Page) -> ft.View:
         controls=[
             header,
             category_buttons,
-            ft.Text("ร้านอาหาร - อาหารไทย", size=16, weight="bold", color=BRAND_ORANGE),
+            ft.Row(
+                alignment=ft.MainAxisAlignment.START,
+                controls=[
+                    
+                    ft.Text("ร้านอาหาร - อาหารไทย", size=18, weight="bold", color=BRAND_ORANGE),
+                ],
+            ),
             food_list,
             ft.Container(expand=True),
             bottom_nav,
         ],
     )
 
-    # ---------- Phone frame ----------
+    # ---------- ไล่สีพื้นหลังแบบ home.py ----------
+    orange_gradient_bg = ft.Container(
+        width=PHONE_W,
+        height=340,
+        gradient=ft.LinearGradient(
+            begin=ft.alignment.top_center,
+            end=ft.alignment.bottom_center,
+            colors=[BRAND_ORANGE, "#F6D0A0", "#FFFFFFFF"],  # ไล่สีแบบ home.py
+            stops=[0.0, 0.6, 1.0],
+        ),
+    )
+
+    # ---------- Stack รวมพื้นหลัง + เนื้อหา ----------
     phone_frame = ft.Stack(
         width=PHONE_W,
         height=PHONE_H,
         controls=[
+            orange_gradient_bg,  # พื้นหลังไล่สี
             ft.Container(
                 padding=ft.padding.symmetric(horizontal=12, vertical=10),
                 content=body,
-            )
+            ),
         ],
     )
 
+    # ---------- Frame หลัก ----------
     return ft.View(
         route="/categories",
         padding=0,
         controls=[
             ft.Container(
                 expand=True,
-                bgcolor=ft.Colors.BLACK,
+                bgcolor=ft.Colors.BLACK,  # พื้นหลังนอกมือถือ
                 alignment=ft.alignment.center,
                 content=ft.Container(
                     width=PHONE_W,
