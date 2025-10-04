@@ -1,12 +1,19 @@
 import flet as ft
 from flet import Icons, Colors
+import json
+import os
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
 
 def build_home_view(page: ft.Page) -> ft.View:
-    # ---------- Header (แถบส้มด้านบน) ----------
+    # ---------- โหลดข้อมูลจาก foods.json ----------
+    foods_path = os.path.join(os.path.dirname(__file__), "data", "foods.json")
+    with open(foods_path, "r", encoding="utf-8") as f:
+        foods = json.load(f)
+
+    # ---------- Header ----------
     header_row = ft.Row(
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -22,7 +29,7 @@ def build_home_view(page: ft.Page) -> ft.View:
             ft.IconButton(
                 icon=Icons.PERSON,
                 icon_color=Colors.WHITE,
-                on_click=lambda e: page.go("/"),  # ไปหน้า Login ภายหลัง
+                on_click=lambda e: page.go("/"),  # กลับหน้า Login
             ),
         ],
     )
@@ -42,10 +49,10 @@ def build_home_view(page: ft.Page) -> ft.View:
         content=ft.Column(spacing=12, controls=[header_row, search]),
     )
 
-    # ---------- ปุ่มบน 2 อัน ----------
+    # ---------- ปุ่มบน ----------
     def pill(icon_src: str, label: str):
         return ft.Container(
-            bgcolor=Colors.WHITE,              # การ์ดพื้นขาว
+            bgcolor=Colors.WHITE,
             border_radius=12,
             padding=12,
             width=(PHONE_W - 64) / 2,
@@ -54,7 +61,10 @@ def build_home_view(page: ft.Page) -> ft.View:
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=6,
-                controls=[ft.Image(src=icon_src, width=40, height=40), ft.Text(label, size=14)],
+                controls=[
+                    ft.Image(src=icon_src, width=40, height=40),
+                    ft.Text(label, size=14),
+                ],
             ),
         )
 
@@ -63,10 +73,10 @@ def build_home_view(page: ft.Page) -> ft.View:
         controls=[pill("star.png", "ร้านเด็ด"), pill("roll.png", "สุ่มอาหาร")],
     )
 
-    # ---------- แถว feature 4 อัน ----------
+    # ---------- Feature 4 อัน ----------
     def feature(icon_src: str, label: str):
         return ft.Container(
-            bgcolor=Colors.WHITE,              # กล่องเล็กพื้นขาว
+            bgcolor=Colors.WHITE,
             border_radius=12,
             padding=10,
             width=(PHONE_W - 64) / 4,
@@ -88,7 +98,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- หัวข้อร้านเด็ด + ภาพใหญ่ ----------
+    # ---------- ร้านเด็ด (Banner เปลี่ยนภาพอัตโนมัติ + จุด indicator + เม้าส์ลากได้) ----------
     highlight_title = ft.Row(
         alignment=ft.MainAxisAlignment.START,
         controls=[
@@ -98,27 +108,101 @@ def build_home_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    highlight_image = ft.Container(
+    banners = ["banner.png", "banner2.png", "banner3.png"]
+    current_index = 0
+    banner_image = ft.Image(
+        src=banners[current_index],
+        fit=ft.ImageFit.COVER,
         width=PHONE_W - 24,
         height=180,
-        border_radius=16,
-        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-        shadow=ft.BoxShadow(blur_radius=12, color=Colors.BLACK26),
-        content=ft.Image(src="urban.png", fit=ft.ImageFit.COVER),
     )
 
-    # ---------- กินตามดวงวันนี้ (การ์ดอาหารพื้นขาว) ----------
-    card_w = 120
+    # จุดบอกหน้า
+    dots = ft.Row(
+        alignment=ft.MainAxisAlignment.CENTER,
+        spacing=6,
+        controls=[
+            ft.Container(
+                width=8,
+                height=8,
+                border_radius=20,
+                bgcolor=BRAND_ORANGE if i == current_index else ft.Colors.BLACK26,
+            )
+            for i in range(len(banners))
+        ],
+    )
+
+    def update_banner(new_index):
+        nonlocal current_index
+        current_index = new_index % len(banners)
+        banner_image.src = banners[current_index]
+        banner_image.update()
+        for i, d in enumerate(dots.controls):
+            d.bgcolor = BRAND_ORANGE if i == current_index else ft.Colors.BLACK26
+        dots.update()
+
+    # ✅ ใช้ mouse หรือ touch ลากเลื่อน
+    drag_start_x = 0
+
+    def on_pan_start(e: ft.DragStartEvent):
+        nonlocal drag_start_x
+        drag_start_x = e.global_x
+
+    def on_pan_update(e: ft.DragUpdateEvent):
+        # ถ้าอยากให้ภาพขยับตามเม้าส์ สามารถใช้ offset ได้
+        pass
+
+    def on_pan_end(e: ft.DragEndEvent):
+        delta = e.global_x - drag_start_x
+        if delta < -50:  # ปัดซ้าย
+            update_banner(current_index + 1)
+        elif delta > 50:  # ปัดขวา
+            update_banner(current_index - 1)
+
+    # ✅ Auto slide ทุก 3 วินาที
+    async def auto_slide_loop():
+        import asyncio
+        while True:
+            await asyncio.sleep(3)
+            update_banner(current_index + 1)
+
+    page.run_task(auto_slide_loop)
+
+    highlight_banner = ft.Column(
+        spacing=6,
+        controls=[
+            ft.GestureDetector(
+                on_pan_start=on_pan_start,
+                on_pan_update=on_pan_update,
+                on_pan_end=on_pan_end,
+                content=ft.Container(
+                    width=PHONE_W - 24,
+                    height=180,
+                    border_radius=16,
+                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                    shadow=ft.BoxShadow(blur_radius=12, color=ft.Colors.BLACK26),
+                    content=banner_image,
+                ),
+            ),
+            dots,
+        ],
+    )
+
+    # ---------- การ์ดอาหาร (จาก foods.json) ----------
+    card_w, card_h = 120, 160
 
     def food_card(img: str, title: str, subtitle: str):
         return ft.Container(
             width=card_w,
+            height=card_h,
             bgcolor=Colors.WHITE,
             border_radius=12,
             padding=8,
             shadow=ft.BoxShadow(blur_radius=8, color=Colors.BLACK12),
             content=ft.Column(
                 spacing=6,
+                alignment=ft.MainAxisAlignment.START,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
                     ft.Container(
                         height=80,
@@ -126,8 +210,15 @@ def build_home_view(page: ft.Page) -> ft.View:
                         clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
                         content=ft.Image(src=img, fit=ft.ImageFit.COVER),
                     ),
-                    ft.Text(title, size=12, weight=ft.FontWeight.W_600),
-                    ft.Text(subtitle, size=10, color=Colors.BLACK54),
+                    ft.Text(title, size=12, weight=ft.FontWeight.W_600, text_align=ft.TextAlign.CENTER),
+                    ft.Text(
+                        subtitle,
+                        size=10,
+                        color=Colors.BLACK54,
+                        max_lines=1,
+                        overflow="ellipsis",
+                        text_align=ft.TextAlign.CENTER,
+                    ),
                 ],
             ),
         )
@@ -143,14 +234,11 @@ def build_home_view(page: ft.Page) -> ft.View:
 
     horo_scroller = ft.Row(
         scroll=ft.ScrollMode.ALWAYS,
-        controls=[
-            food_card("food1.png", "เกิดวันจันทร์", "กินข้าวมันไก่"),
-            food_card("food2.png", "เกิดวันอังคาร", "กินกะเพราหมูสับ"),
-            food_card("food3.png", "เกิดวันพุธ", "กินไก่ทอด"),
-        ],
+        spacing=12,
+        controls=[food_card(f["image"], f["title"], f["subtitle"]) for f in foods],
     )
 
-    # ---------- Bottom nav (มี on_tap ให้ครบ ป้องกัน warning) ----------
+    # ---------- Bottom nav ----------
     def nav_item(icon: str, label: str, active=False, on_click=None):
         return ft.GestureDetector(
             on_tap=on_click or (lambda e: None),
@@ -179,15 +267,15 @@ def build_home_view(page: ft.Page) -> ft.View:
         ),
     )
 
-    # ---------- เนื้อหาในกรอบแอป ----------
+    # ---------- เนื้อหา ----------
     body = ft.Column(
         spacing=12,
         controls=[
             header,
             top_buttons,
-            feature_row,      # <= ถึงตรงนี้คือ “ครึ่งหน้าจอแรก”
+            feature_row,
             highlight_title,
-            highlight_image,
+            highlight_banner,
             horo_title,
             horo_scroller,
             ft.Container(expand=True),
@@ -195,44 +283,39 @@ def build_home_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ไล่สีส้มลงมาถึง “feature_row”
+    # ---------- BG ----------
     orange_gradient_bg = ft.Container(
         width=PHONE_W,
-        height=340,  # ปรับให้ครอบคลุมถึงแถว "กินตามดวง"
+        height=340,
         gradient=ft.LinearGradient(
             begin=ft.alignment.top_center,
             end=ft.alignment.bottom_center,
-            colors=[BRAND_ORANGE, "#F6D0A0", "#FFFFFFFF"],  # ส้ม -> อ่อน -> ขาว
+            colors=[BRAND_ORANGE, "#F6D0A0", "#FFFFFFFF"],
             stops=[0.0, 0.6, 1.0],
         ),
     )
 
-    # ซ้อน layer: พื้นไล่สี + เนื้อหา
     phone_frame = ft.Stack(
         width=PHONE_W,
         height=PHONE_H,
         controls=[
-            orange_gradient_bg,                    # ชั้นล่าง: ไล่สี
-            ft.Container(                          # ชั้นบน: เนื้อหา
-                padding=ft.padding.symmetric(horizontal=12, vertical=10),
-                content=body,
-            ),
+            orange_gradient_bg,
+            ft.Container(padding=ft.padding.symmetric(horizontal=12, vertical=10), content=body),
         ],
     )
 
-    # กลางจอ / พื้นหลังนอกแอป = ดำสนิท
     return ft.View(
         route="/home",
         padding=0,
         controls=[
             ft.Container(
                 expand=True,
-                bgcolor=Colors.BLACK,               # พื้นหลังนอกแอปเป็นดำ
+                bgcolor=Colors.BLACK,
                 alignment=ft.alignment.center,
                 content=ft.Container(
                     width=PHONE_W,
                     height=PHONE_H,
-                    bgcolor=Colors.WHITE,           # พื้นในแอปยังขาว
+                    bgcolor=Colors.WHITE,
                     content=phone_frame,
                 ),
             )
