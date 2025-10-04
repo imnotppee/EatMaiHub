@@ -59,22 +59,37 @@ def categories_view(page: ft.Page) -> ft.View:
         content=ft.Column(spacing=12, controls=[header_row, search]),
     )
 
+    # ---------- Category card function ----------
+    def category_card(img: str, label: str, active=False):
+        return ft.Column(
+            [
+                ft.Container(
+                    width=72,
+                    height=72,
+                    bgcolor=ft.Colors.WHITE,
+                    border_radius=12,
+                    shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.BLACK12),
+                    alignment=ft.alignment.center,
+                    content=ft.Image(src=img, width=48, height=48, fit=ft.ImageFit.CONTAIN),
+                ),
+                ft.Text(
+                    label,
+                    size=14,
+                    weight="bold" if active else "normal",
+                    color=BRAND_ORANGE if active else ft.Colors.BLACK87,
+                ),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=6,
+        )
+
     # ---------- Category buttons ----------
     category_buttons = ft.Row(
         alignment=ft.MainAxisAlignment.SPACE_AROUND,
         controls=[
-            ft.Column([
-                ft.Image(src="thai_icon.png", width=64, height=64),
-                ft.Text("อาหารไทย", size=12)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            ft.Column([
-                ft.Image(src="japan_icon.png", width=64, height=64),
-                ft.Text("อาหารญี่ปุ่น", size=12)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            ft.Column([
-                ft.Image(src="fastfood_icon.png", width=64, height=64),
-                ft.Text("อาหารฟาสต์ฟู้ด", size=12)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            category_card("catthai.png", "อาหารไทย", active=True),
+            category_card("catjapan.png", "อาหารญี่ปุ่น"),
+            category_card("catfastfood.png", "อาหารฟาสต์ฟู้ด"),
         ],
     )
 
@@ -141,7 +156,7 @@ def categories_view(page: ft.Page) -> ft.View:
         controls=[
             header,
             category_buttons,
-            ft.Text("อาหารไทย", size=16, weight="bold", color=BRAND_ORANGE),
+            ft.Text("ร้านอาหาร - อาหารไทย", size=16, weight="bold", color=BRAND_ORANGE),
             food_list,
             ft.Container(expand=True),
             bottom_nav,
