@@ -1,16 +1,20 @@
 import flet as ft
+import json
+import os
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
-# mock data ร้านอาหาร (ยังไม่เชื่อม DB)
-thai_foods = [
-    {"name": "ผัดไทย คลาสสิค", "rating": "4.6", "address": "ถนนคลองกรุง", "image": "thai1.png"},
-    {"name": "ตำถาดซอย byเจ๊อ๊อด", "rating": "4.2", "address": "ลาดกระบัง 11", "image": "thai2.png"},
-    {"name": "หมูกอดบ้านฉัน", "rating": "4.7", "address": "ซอยวิมาน ลาดกระบัง 52", "image": "thai3.png"},
-]
+# โหลด JSON จากไฟล์
+def load_data():
+    path = os.path.join(os.path.dirname(__file__), "data", "categories.json")
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 def categories_view(page: ft.Page) -> ft.View:
+    data = load_data()
+    thai_foods = data.get("thai_foods", [])
+
     # ---------- Header ----------
     header_row = ft.Row(
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
