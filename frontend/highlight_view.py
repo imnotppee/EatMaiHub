@@ -30,6 +30,7 @@ def build_highlight_view(page: ft.Page) -> ft.View:
         ],
     )
 
+    # ---------- ช่องค้นหา ----------
     search = ft.TextField(
         hint_text="ค้นหาร้าน / เมนู",
         prefix_icon=ft.Icons.SEARCH,
@@ -64,33 +65,41 @@ def build_highlight_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- รายการร้านเด็ด ----------
-    def restaurant_card(img, name, desc):
-        return ft.Container(
-            bgcolor=ft.Colors.WHITE,
-            border_radius=12,
-            padding=10,
-            margin=ft.margin.only(bottom=16),
-            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK12),
-            content=ft.Column(
-                spacing=8,
-                controls=[
-                    ft.Container(
-                        height=200,
-                        border_radius=12,
-                        clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                        content=ft.Image(src=img, fit=ft.ImageFit.COVER, width=PHONE_W - 40),
-                    ),
-                    ft.Text(name, size=16, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
-                    ft.Text(desc, size=12, color=ft.Colors.BLACK87),
-                ],
+    # ---------- การ์ดแต่ละร้าน ----------
+    def restaurant_card(img, name, desc, route=None):
+        """สร้างการ์ดร้านพร้อมคลิกได้"""
+        return ft.GestureDetector(
+            on_tap=lambda e: page.go(route) if route else None,
+            content=ft.Container(
+                bgcolor=ft.Colors.WHITE,
+                border_radius=12,
+                padding=10,
+                margin=ft.margin.only(bottom=16),
+                shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK12),
+                content=ft.Column(
+                    spacing=8,
+                    controls=[
+                        ft.Container(
+                            height=200,
+                            border_radius=12,
+                            clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                            content=ft.Image(src=img, fit=ft.ImageFit.COVER, width=PHONE_W - 40),
+                        ),
+                        ft.Text(name, size=16, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
+                        ft.Text(desc, size=12, color=ft.Colors.BLACK87),
+                    ],
+                ),
             ),
         )
 
+    # ---------- สร้างรายการร้านทั้งหมด ----------
     restaurant_list = ft.Column(
         spacing=12,
         controls=[
-            restaurant_card(r["image"], r["name"], r["desc"]) for r in restaurants
+            restaurant_card(r["image"], r["name"], r["desc"], route="/urban") 
+            if "Urban" in r["name"] 
+            else restaurant_card(r["image"], r["name"], r["desc"])
+            for r in restaurants
         ],
     )
 

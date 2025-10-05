@@ -108,7 +108,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         ],
     )
 
-     # ---------- ร้านเด็ด (Banner slide ทีละรูป + จุด indicator) ----------
+         # ---------- ร้านเด็ด (Banner slide ทีละรูป + จุด indicator) ----------
     highlight_title = ft.Row(
         alignment=ft.MainAxisAlignment.START,
         controls=[
@@ -157,7 +157,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         drag_last_x["value"] = e.local_x
 
     def on_pan_update(e: ft.DragUpdateEvent):
-        drag_last_x["value"] = e.local_x  # เก็บตำแหน่งล่าสุด
+        drag_last_x["value"] = e.local_x
 
     def on_pan_end(e: ft.DragEndEvent):
         start = drag_start_x["value"]
@@ -172,10 +172,18 @@ def build_home_view(page: ft.Page) -> ft.View:
         drag_start_x["value"] = None
         drag_last_x["value"] = None
 
+    # ✅ เพิ่มให้กด banner แล้วไปหน้า urban
+    def on_banner_tap(e):
+        if current_index == 0:
+            page.go("/urban")  # banner แรก → Urban Street
+        else:
+            page.go("/highlight")  # banner อื่นๆ → หน้า highlight รวม
+
     highlight_banner = ft.Column(
         spacing=6,
         controls=[
             ft.GestureDetector(
+                on_tap=on_banner_tap,
                 on_pan_start=on_pan_start,
                 on_pan_update=on_pan_update,
                 on_pan_end=on_pan_end,
