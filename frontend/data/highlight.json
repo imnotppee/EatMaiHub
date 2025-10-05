@@ -1,0 +1,27 @@
+[
+  {
+    "image": "urban.png",
+    "name": "Urban Street",
+    "desc": "สเต็กและเบอร์เกอร์สุดชิลล์กลางลาดกระบัง"
+  },
+  {
+    "image": "banner2.png",
+    "name": "Sunbae Bar & Restaurant",
+    "desc": "อาหารฟิวชั่นและบรรยากาศสุดคูล"
+  },
+  {
+    "image": "banner3.png",
+    "name": "Hot to Bun",
+    "desc": "ร้านเบอร์เกอร์โฮมเมดพร้อมคาเฟ่สุดอบอุ่น"
+  },
+  {
+    "image": "banner4.png",
+    "name": "SteakHub",
+    "desc": "เสิร์ฟสเต็กจานร้อนในราคาโดนใจ"
+  },
+  {
+    "image": "banner5.png",
+    "name": "Chill House Café",
+    "desc": "จิบกาแฟ กินของอร่อย รับบรรยากาศสบาย ๆ"
+  }
+]
