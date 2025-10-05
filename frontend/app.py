@@ -7,6 +7,10 @@ from reset_password import build_reset_view
 from forgot_password import build_forgot_view
 from home import build_home_view
 from categories import categories_view   # ✅ เพิ่ม import หน้า categories
+from highlight_view import build_highlight_view
+from urban_view import build_urban_view
+from sunbae_view import build_sunbae_view
+
 
 
 def main(page: ft.Page):
@@ -21,7 +25,7 @@ def main(page: ft.Page):
     page.scroll = ft.ScrollMode.AUTO
     page.theme_mode = ft.ThemeMode.LIGHT
 
-    # ขนาดจำลองมือถือ 412x917
+    # ตั้งขนาดจำลองมือถือ
     page.window_width = 412
     page.window_height = 917
     page.window_resizable = False
@@ -45,11 +49,19 @@ def main(page: ft.Page):
             page.views.append(build_forgot_view(page))
         elif r == "/home":
             page.views.append(build_home_view(page))
+
         elif r == "/categories":   # ✅ route ไปหน้า categories
             page.views.append(categories_view(page))
+        elif r == "/highlight":
+            page.views.append(build_highlight_view(page))
+        elif r == "/urban":
+            page.views.append(build_urban_view(page))
+        elif r == "/sunbae":
+            page.views.append(build_sunbae_view(page))
         else:
             # default = login
             page.views.append(build_login_view(page))
+        
 
         page.update()
 
@@ -61,7 +73,7 @@ def main(page: ft.Page):
     page.on_route_change = route_change
     page.on_view_pop = view_pop
 
-    # เริ่มที่ route ปัจจุบัน หรือหน้า login
+    # เริ่มต้นที่หน้า login หรือ route ปัจจุบัน
     page.go(page.route or "/")
 
 

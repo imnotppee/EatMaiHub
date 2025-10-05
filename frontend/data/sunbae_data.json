@@ -1,0 +1,13 @@
+{
+    "name": "Sunbae Korean Restaurant",
+    "review": "อาหารเกาหลีแท้ ๆ รสชาติเกาใจ",
+    "address": "KL Villa 1 ซอย ฉลองกรุง 1 แขวงลาดกระบัง เขตลาดกระบัง",
+    "banner": ["banner2.png"],
+    "menus": [
+      { "name": "ไก่ทอดซอสเกาหลี", "image": "sunbae1.png" },
+      { "name": "รามยอนเกาหลี", "image": "sunbae2.png" },
+      { "name": "ต๊อกบกกีชีส", "image": "sunbae3.png" },
+      { "name": "คิมบับคลาสสิก", "image": "sunbae4.png" }
+    ]
+  }
+  
