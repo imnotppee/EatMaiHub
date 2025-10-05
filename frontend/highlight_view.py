@@ -92,16 +92,22 @@ def build_highlight_view(page: ft.Page) -> ft.View:
             ),
         )
 
-    # ---------- สร้างรายการร้านทั้งหมด ----------
+# ---------- สร้างรายการร้านทั้งหมด ----------
     restaurant_list = ft.Column(
         spacing=12,
         controls=[
-            restaurant_card(r["image"], r["name"], r["desc"], route="/urban") 
-            if "Urban" in r["name"] 
-            else restaurant_card(r["image"], r["name"], r["desc"])
+            restaurant_card(
+                r["image"],
+                r["name"],
+                r["desc"],
+                route="/urban" if r["name"] == "Urban Street" 
+                else "/sunbae" if r["name"] == "Sunbae Korean Restaurant" 
+                else None
+            )
             for r in restaurants
         ],
     )
+
 
     # ---------- เนื้อหาหลัก ----------
     body = ft.Container(

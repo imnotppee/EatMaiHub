@@ -176,8 +176,11 @@ def build_home_view(page: ft.Page) -> ft.View:
     def on_banner_tap(e):
         if current_index == 0:
             page.go("/urban")  # banner แรก → Urban Street
+        elif current_index == 1:
+            page.go("/sunbae")  # banner ที่สอง → Sunbae Korean Restaurant
         else:
-            page.go("/highlight")  # banner อื่นๆ → หน้า highlight รวม
+            page.go("/highlight")  # banner ที่สาม → highlight รวม
+
 
     highlight_banner = ft.Column(
         spacing=6,

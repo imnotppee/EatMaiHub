@@ -8,6 +8,8 @@ from forgot_password import build_forgot_view
 from home import build_home_view
 from highlight_view import build_highlight_view
 from urban_view import build_urban_view
+from sunbae_view import build_sunbae_view
+
 
 def main(page: ft.Page):
     # ---------- window & page look ----------
@@ -49,6 +51,8 @@ def main(page: ft.Page):
             page.views.append(build_highlight_view(page))
         elif r == "/urban":
             page.views.append(build_urban_view(page))
+        elif r == "/sunbae":
+            page.views.append(build_sunbae_view(page))
         else:
             # default = login
             page.views.append(build_login_view(page))
