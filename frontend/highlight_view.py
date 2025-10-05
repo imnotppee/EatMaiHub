@@ -101,7 +101,8 @@ def build_highlight_view(page: ft.Page) -> ft.View:
                 r["name"],
                 r["desc"],
                 route="/urban" if r["name"] == "Urban Street" 
-                else "/sunbae" if r["name"] == "Sunbae Korean Restaurant" 
+                else "/sunbae" if r["name"] == "Sunbae Korean Restaurant"
+                else "/hottobun" if "Hotto Bun" in r["name"] 
                 else None
             )
             for r in restaurants

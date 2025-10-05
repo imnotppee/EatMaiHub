@@ -1,0 +1,28 @@
+{
+    "name": "Hotto Bun ลาดกระบัง ホットバン",
+    "review": "ร้านญี่ปุ่นแฮนเมดพร้อมคาเฟ่สุดอบอุ่น",
+    "address": "ซอยฉลองกรุง 1 แขวงลาดกระบัง กรุงเทพมหานคร",
+    "banner": [
+      "hottobun_banner1.jpg",
+      "hottobun_banner2.jpg"
+    ],
+    "menus": [
+      {
+        "name": "เบอร์เกอร์หมูเทอริยากิ",
+        "image": "menu_bun1.jpg"
+      },
+      {
+        "name": "ราเมงทงคัตสึ",
+        "image": "menu_bun2.jpg"
+      },
+      {
+        "name": "ข้าวหน้าไก่ทอดราดซอสญี่ปุ่น",
+        "image": "menu_bun3.jpg"
+      },
+      {
+        "name": "ไอศกรีมมัทฉะโฮมเมด",
+        "image": "menu_bun4.jpg"
+      }
+    ]
+  }
+  

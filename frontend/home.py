@@ -178,8 +178,8 @@ def build_home_view(page: ft.Page) -> ft.View:
             page.go("/urban")  # banner แรก → Urban Street
         elif current_index == 1:
             page.go("/sunbae")  # banner ที่สอง → Sunbae Korean Restaurant
-        else:
-            page.go("/highlight")  # banner ที่สาม → highlight รวม
+        elif current_index == 2:
+            page.go("/hottobun")   # banner สาม → Hotto Bun
 
 
     highlight_banner = ft.Column(

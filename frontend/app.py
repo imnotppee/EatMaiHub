@@ -9,6 +9,7 @@ from home import build_home_view
 from highlight_view import build_highlight_view
 from urban_view import build_urban_view
 from sunbae_view import build_sunbae_view
+from hottobun_view import build_hottobun_view
 
 
 def main(page: ft.Page):
@@ -53,6 +54,8 @@ def main(page: ft.Page):
             page.views.append(build_urban_view(page))
         elif r == "/sunbae":
             page.views.append(build_sunbae_view(page))
+        elif r == "/hottobun":
+            page.views.append(build_hottobun_view(page))   
         else:
             # default = login
             page.views.append(build_login_view(page))
