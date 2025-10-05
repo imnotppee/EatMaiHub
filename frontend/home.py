@@ -98,7 +98,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- ร้านเด็ด (Banner เปลี่ยนภาพอัตโนมัติ + จุด indicator + เม้าส์ลากได้) ----------
+     # ---------- ร้านเด็ด (Banner slide ทีละรูป + จุด indicator) ----------
     highlight_title = ft.Row(
         alignment=ft.MainAxisAlignment.START,
         controls=[
@@ -110,6 +110,9 @@ def build_home_view(page: ft.Page) -> ft.View:
 
     banners = ["banner.png", "banner2.png", "banner3.png"]
     current_index = 0
+    drag_start_x = {"value": None}
+    drag_last_x = {"value": None}
+
     banner_image = ft.Image(
         src=banners[current_index],
         fit=ft.ImageFit.COVER,
@@ -117,22 +120,20 @@ def build_home_view(page: ft.Page) -> ft.View:
         height=180,
     )
 
-    # จุดบอกหน้า
+    # จุด indicator ด้านล่าง
     dots = ft.Row(
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=6,
         controls=[
             ft.Container(
-                width=8,
-                height=8,
-                border_radius=20,
-                bgcolor=BRAND_ORANGE if i == current_index else ft.Colors.BLACK26,
+                width=8, height=8, border_radius=20,
+                bgcolor=BRAND_ORANGE if i == current_index else ft.Colors.BLACK26
             )
             for i in range(len(banners))
         ],
     )
 
-    def update_banner(new_index):
+    def update_banner(new_index: int):
         nonlocal current_index
         current_index = new_index % len(banners)
         banner_image.src = banners[current_index]
@@ -141,32 +142,25 @@ def build_home_view(page: ft.Page) -> ft.View:
             d.bgcolor = BRAND_ORANGE if i == current_index else ft.Colors.BLACK26
         dots.update()
 
-    # ✅ ใช้ mouse หรือ touch ลากเลื่อน
-    drag_start_x = 0
-
     def on_pan_start(e: ft.DragStartEvent):
-        nonlocal drag_start_x
-        drag_start_x = e.global_x
+        drag_start_x["value"] = e.local_x
+        drag_last_x["value"] = e.local_x
 
     def on_pan_update(e: ft.DragUpdateEvent):
-        # ถ้าอยากให้ภาพขยับตามเม้าส์ สามารถใช้ offset ได้
-        pass
+        drag_last_x["value"] = e.local_x  # เก็บตำแหน่งล่าสุด
 
     def on_pan_end(e: ft.DragEndEvent):
-        delta = e.global_x - drag_start_x
-        if delta < -50:  # ปัดซ้าย
+        start = drag_start_x["value"]
+        end = drag_last_x["value"]
+        if start is None or end is None:
+            return
+        delta = end - start
+        if delta < -50:   # ปัดซ้าย
             update_banner(current_index + 1)
         elif delta > 50:  # ปัดขวา
             update_banner(current_index - 1)
-
-    # ✅ Auto slide ทุก 3 วินาที
-    async def auto_slide_loop():
-        import asyncio
-        while True:
-            await asyncio.sleep(3)
-            update_banner(current_index + 1)
-
-    page.run_task(auto_slide_loop)
+        drag_start_x["value"] = None
+        drag_last_x["value"] = None
 
     highlight_banner = ft.Column(
         spacing=6,
@@ -184,7 +178,7 @@ def build_home_view(page: ft.Page) -> ft.View:
                     content=banner_image,
                 ),
             ),
-            dots,
+            dots
         ],
     )
 
