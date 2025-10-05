@@ -6,10 +6,11 @@ from signup import build_signup_view
 from reset_password import build_reset_view
 from forgot_password import build_forgot_view
 from home import build_home_view
-from categories import categories_view   # ✅ เพิ่ม import หน้า categories
+from categories import categories_view   
 from highlight_view import build_highlight_view
 from urban_view import build_urban_view
 from sunbae_view import build_sunbae_view
+from random_food import build_spin_view
 
 
 
@@ -49,7 +50,6 @@ def main(page: ft.Page):
             page.views.append(build_forgot_view(page))
         elif r == "/home":
             page.views.append(build_home_view(page))
-
         elif r == "/categories":   # ✅ route ไปหน้า categories
             page.views.append(categories_view(page))
         elif r == "/highlight":
@@ -58,11 +58,12 @@ def main(page: ft.Page):
             page.views.append(build_urban_view(page))
         elif r == "/sunbae":
             page.views.append(build_sunbae_view(page))
+        elif r == "/random":       # ✅ เพิ่ม route สำหรับหน้าสุ่มอาหาร
+            page.views.append(build_spin_view(page))
         else:
-            # default = login
+        # default = login
             page.views.append(build_login_view(page))
-        
-
+            
         page.update()
 
     def view_pop(e: ft.ViewPopEvent):

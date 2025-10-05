@@ -1,0 +1,11 @@
+{
+  "foods": [
+    { "name": "ข้าวไก่ทอดซอสเขียวหวาน", "image": "xxx2.png" },
+    { "name": "แซลม่อนแซ่บ", "image": "xxxx.png" },
+    { "name": "สเต็กหมูทีโบน", "image": "xxx3.png" },
+    { "name": "ข้าวยำบิบิมบับ", "image": "xx33.png" },
+    { "name": "หมาล่าไทม์", "image": "xxx77.png" },
+    { "name": "กรีกโยเกิร์ตผลไม้", "image": "xxx767.png" },
+    { "name": "ข้าวแกงกะหรี่", "image": "xxx77.png" }
+  ]
+}

@@ -76,7 +76,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         alignment=ft.MainAxisAlignment.SPACE_AROUND,
         controls=[
             pill("star.png", "ร้านเด็ด", route="/highlight"),
-            pill("roll.png", "สุ่มอาหาร"),
+            pill("roll.png", "สุ่มอาหาร", route="/random")
         ],
     )
 
