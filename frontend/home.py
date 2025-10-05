@@ -50,28 +50,38 @@ def build_home_view(page: ft.Page) -> ft.View:
     )
 
     # ---------- ปุ่มบน ----------
-    def pill(icon_src: str, label: str):
-        return ft.Container(
-            bgcolor=Colors.WHITE,
-            border_radius=12,
-            padding=12,
-            width=(PHONE_W - 64) / 2,
-            shadow=ft.BoxShadow(blur_radius=10, spread_radius=0, color=Colors.BLACK12),
-            content=ft.Column(
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=6,
-                controls=[
-                    ft.Image(src=icon_src, width=40, height=40),
-                    ft.Text(label, size=14),
+    def pill(icon_src: str, label: str, route=None):
+        return ft.GestureDetector(
+            on_tap=lambda e: page.go(route) if route else None,
+            content=ft.Container(
+                bgcolor=Colors.WHITE,
+                border_radius=12,
+                padding=12,
+                width=(PHONE_W - 64) / 2,
+                shadow=ft.BoxShadow(blur_radius=10, spread_radius=0, color=Colors.BLACK12),
+                content=ft.Column(
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=6,
+                    controls=[
+                        ft.Image(src=icon_src, width=40, height=40),
+                        ft.Text(label, size=14),
                 ],
             ),
-        )
+        ),
+    )
+
 
     top_buttons = ft.Row(
         alignment=ft.MainAxisAlignment.SPACE_AROUND,
-        controls=[pill("star.png", "ร้านเด็ด"), pill("roll.png", "สุ่มอาหาร")],
+        controls=[
+            pill("star.png", "ร้านเด็ด", route="/highlight"),
+            pill("roll.png", "สุ่มอาหาร")
+        ],
     )
+
+   
+
 
     # ---------- Feature 4 อัน ----------
     def feature(icon_src: str, label: str):
