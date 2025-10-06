@@ -54,14 +54,13 @@ def main(page: ft.Page):
             page.views.append(build_urban_view(page))
         elif r == "/sunbae":
             page.views.append(build_sunbae_view(page))
-        elif r == "/hottobun":
-            page.views.append(build_hottobun_view(page))   
+        elif r == "/hottobun":                           # ✅ เพิ่มตรงนี้
+            page.views.append(build_hottobun_view(page))
         else:
-            # default = login
             page.views.append(build_login_view(page))
-        
 
         page.update()
+
 
     def view_pop(e: ft.ViewPopEvent):
         page.views.pop()
