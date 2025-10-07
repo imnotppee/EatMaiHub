@@ -4,5 +4,8 @@ flet
 # Backend
 fastapi
 uvicorn[standard]
+python-dotenv
+requests
+
 
 # Database
