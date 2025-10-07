@@ -1,13 +1,15 @@
 import flet as ft
-import json, os, random, asyncio
+import json, os, random, time
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
+
 
 def load_food_data():
     path = os.path.join(os.path.dirname(__file__), "data", "random_food.json")
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)["foods"]
+
 
 def build_spin_view(page: ft.Page):
     foods = load_food_data()
@@ -52,7 +54,12 @@ def build_spin_view(page: ft.Page):
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     controls=[
                         ft.Image(src=icon_src, width=40, height=40),
-                        ft.Text(label, size=14, weight="bold" if active else "normal", color=BRAND_ORANGE if active else ft.Colors.BLACK87),
+                        ft.Text(
+                            label,
+                            size=14,
+                            weight="bold" if active else "normal",
+                            color=BRAND_ORANGE if active else ft.Colors.BLACK87,
+                        ),
                     ],
                 ),
             ),
@@ -96,7 +103,7 @@ def build_spin_view(page: ft.Page):
         ],
     )
 
-    # ---------- กล่องแสดงรูปสุ่ม ----------
+    # ---------- กล่องแสดงสุ่ม ----------
     random_image = ft.Image(
         src="photo/qqq.jpg",
         width=220,
@@ -133,21 +140,23 @@ def build_spin_view(page: ft.Page):
         ),
     )
 
-    async def random_food(e):
-        food = random.choice(foods)
-        food_name = food["name"]
-        food_image = food["image"]
+    # ---------- ฟังก์ชันสุ่ม ----------
+    def on_spin(e):
+        # สลับเมนู 4 ครั้งก่อนสุ่มจริง
+        for i in range(4):
+            temp = random.choice(foods)
+            random_image.src = f"photo/{temp['image']}"
+            random_name.value = temp["name"]
+            page.update()
+            time.sleep(0.2)
 
-        random_name.value = food_name
-        random_image.src = f"photo/{food_image}"
+        # เมนูสุดท้ายจริง
+        final_food = random.choice(foods)
+        random_image.src = f"photo/{final_food['image']}"
+        random_name.value = final_food["name"]
         page.update()
 
-        for scale in [1.0, 1.15, 0.9, 1.0]:
-            random_box.scale = ft.Scale(scale)
-            random_box.animate_scale = ft.animation.Animation(200, "easeOutBack")
-            page.update()
-            await asyncio.sleep(0.1)
-
+    # ---------- ปุ่มสุ่ม ----------
     spin_button = ft.Container(
         width=180,
         height=52,
@@ -167,7 +176,7 @@ def build_spin_view(page: ft.Page):
                 ft.Text("สุ่มเลย !", size=18, weight="bold", color=ft.Colors.WHITE),
             ],
         ),
-        on_click=random_food,
+        on_click=on_spin,
     )
 
     # ---------- ส่วนกลาง ----------
@@ -222,6 +231,7 @@ def build_spin_view(page: ft.Page):
         ],
     )
 
+    # ---------- BG ----------
     bg = ft.Container(
         width=PHONE_W,
         height=340,
