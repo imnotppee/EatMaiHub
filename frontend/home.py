@@ -84,29 +84,36 @@ def build_home_view(page: ft.Page) -> ft.View:
 
 
     # ---------- Feature 4 อัน ----------
-    def feature(icon_src: str, label: str):
-        return ft.Container(
-            bgcolor=Colors.WHITE,
-            border_radius=12,
-            padding=10,
-            width=(PHONE_W - 64) / 4,
-            shadow=ft.BoxShadow(blur_radius=8, color=Colors.BLACK12),
-            content=ft.Column(
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=6,
-                controls=[ft.Image(src=icon_src, width=32, height=32), ft.Text(label, size=12)],
+    def feature(icon_src: str, label: str, route=None):
+        return ft.GestureDetector(
+            on_tap=lambda e: page.go(route) if route else None,
+            content=ft.Container(
+                bgcolor=Colors.WHITE,
+                border_radius=12,
+                padding=10,
+                width=(PHONE_W - 64) / 4,
+                shadow=ft.BoxShadow(blur_radius=8, color=Colors.BLACK12),
+                content=ft.Column(
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=6,
+                    controls=[
+                        ft.Image(src=icon_src, width=32, height=32),
+                        ft.Text(label, size=12),
+                    ],
+                ),
             ),
         )
 
     feature_row = ft.Row(
-        alignment=ft.MainAxisAlignment.SPACE_AROUND,
-        controls=[
-            feature("ball.png", "กินตามดวง"),
-            feature("pin.png", "ร้านใกล้ฉัน"),
-            feature("Category.png", "หมวดหมู่"),
-            feature("palette.png", "กินตามสีวัน"),
-        ],
-    )
+    alignment=ft.MainAxisAlignment.SPACE_AROUND,
+    controls=[
+        feature("ball.png", "กินตามดวง", route="/horoscope"),
+        feature("pin.png", "ร้านใกล้ฉัน", route="/nearby"),
+        feature("Category.png", "หมวดหมู่"),
+        feature("palette.png", "กินตามสีวัน"),
+    ],
+)
+
 
          # ---------- ร้านเด็ด (Banner slide ทีละรูป + จุด indicator) ----------
     highlight_title = ft.Row(
@@ -243,7 +250,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         controls=[
             ft.Image(src="ball.png", width=22, height=22),
             ft.Container(width=6),
-            ft.Text("กินตามดวงวันนี้", size=16, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
+            ft.Text("กินตามดวงของแต่ละวัน", size=16, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
         ],
     )
 
