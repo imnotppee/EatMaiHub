@@ -30,22 +30,13 @@ def categories_view(page: ft.Page) -> ft.View:
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
         controls=[
-            ft.Row(
-                controls=[
-                    ft.IconButton(
-                        icon=ft.Icons.ARROW_BACK,
-                        icon_color=ft.Colors.WHITE,
-                        on_click=lambda e: page.go("/home"),
-                    ),
-                    ft.Image(src="logo.png", width=36, height=36),
-                ],
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
             ft.IconButton(
-                icon=ft.Icons.PERSON,
+                icon=ft.Icons.ARROW_BACK,
                 icon_color=ft.Colors.WHITE,
-                on_click=lambda e: page.go("/"),
+                on_click=lambda e: page.go("/home"),
             ),
+            ft.Image(src="logo.png", width=36, height=36),
+            ft.IconButton(icon=ft.Icons.PERSON, icon_color=ft.Colors.WHITE),
         ],
     )
 
@@ -75,12 +66,11 @@ def categories_view(page: ft.Page) -> ft.View:
                     padding=12,
                     shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK26),
                     content=ft.Row(
-                        alignment=ft.MainAxisAlignment.START,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=12,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         controls=[
                             ft.Container(
-                                width=120,
+                                width=100,
                                 height=100,
                                 border_radius=10,
                                 clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
@@ -94,9 +84,9 @@ def categories_view(page: ft.Page) -> ft.View:
                                     ft.Text(f"รีวิว : {f['rating']} ดาว", size=12, color=ft.Colors.BLACK54),
                                     ft.Text(f"ที่อยู่ : {f['address']}", size=12, color=ft.Colors.BLACK54),
                                 ],
-                            )
-                        ]
-                    )
+                            ),
+                        ],
+                    ),
                 )
             )
         return cards
@@ -108,17 +98,29 @@ def categories_view(page: ft.Page) -> ft.View:
         nonlocal current_category
         current_category = e.control.data
 
+        # โหลดข้อมูลใหม่
         json_file, key = data_map[current_category]
         new_data = load_data(json_file)
         new_foods = new_data.get(key, [])
 
-        # เคลียร์และอัปเดตการ์ดใหม่
+        # อัปเดต list
         food_list_column.controls.clear()
         for c in build_food_list(new_foods):
             food_list_column.controls.append(c)
 
-        # เปลี่ยน title ด้านบน
+        # อัปเดต title
         title.value = f"ร้านอาหาร - {current_category}"
+
+        # อัปเดตสี active ของปุ่มหมวด
+        for btn in category_buttons.controls:
+            label = btn.content.controls[1]
+            if btn.data == current_category:
+                label.color = BRAND_ORANGE
+                label.weight = "bold"
+            else:
+                label.color = ft.Colors.BLACK87
+                label.weight = "normal"
+
         page.update()
 
     # ---------- ปุ่มหมวดหมู่ ----------
@@ -221,10 +223,7 @@ def categories_view(page: ft.Page) -> ft.View:
         height=PHONE_H,
         controls=[
             orange_gradient_bg,
-            ft.Container(
-                padding=ft.padding.symmetric(horizontal=12, vertical=10),
-                content=body,
-            ),
+            ft.Container(padding=ft.padding.symmetric(horizontal=12, vertical=10), content=body),
         ],
     )
 

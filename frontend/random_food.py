@@ -1,5 +1,5 @@
-import flet as ft
-import json, os, random, math, asyncio
+import flet as ft 
+import json, os, random, asyncio
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
@@ -13,10 +13,6 @@ def load_food_data():
 
 def build_spin_view(page: ft.Page):
     foods = load_food_data()
-    segments = [food["name"] for food in foods]
-    num_segments = len(segments)
-    angle_per_seg = 360 / num_segments
-    current_angle = 0
 
     # ---------- HEADER ----------
     header_row = ft.Row(
@@ -111,61 +107,53 @@ def build_spin_view(page: ft.Page):
         ],
     )
 
-    # ---------- วงล้อสุ่ม ----------
-    colors = ["#FF6B6B", "#FFD93D", "#6BCB77", "#4D96FF", "#FFA07A", "#B983FF", "#FF9F1C"]
-
-    labels = []
-    for i, seg in enumerate(segments):
-        color = colors[i % len(colors)]
-        labels.append(
-            ft.Container(
-                width=270,
-                height=270,
-                border_radius=200,
-                bgcolor=color,
-                rotate=ft.Rotate(angle=math.radians(i * angle_per_seg)),
-                alignment=ft.alignment.center_right,
-                border=ft.border.all(2, BRAND_ORANGE),
-                content=ft.Text(
-                    seg,
-                    rotate=ft.Rotate(angle=math.radians(angle_per_seg / 2)),
-                    color=ft.Colors.WHITE,
-                    size=12,
-                    weight="bold",
-                ),
-            )
-        )
-
-    wheel_stack = ft.Stack(
-        width=270,
-        height=270,
-        controls=labels,
-        rotate=ft.Rotate(angle=0, alignment=ft.alignment.center),
+    # ---------- กล่องแสดงรูปสุ่ม ----------
+    random_image = ft.Image(
+        src="photo/placeholder.png",  # รูปเริ่มต้น (สร้างไว้กัน error)
+        width=220,
+        height=220,
+        border_radius=16,
+        fit=ft.ImageFit.COVER,
+    )
+    random_name = ft.Text("", size=18, weight="bold", color=BRAND_ORANGE)
+    random_box = ft.Container(
+        width=300,
+        height=320,
+        border_radius=20,
+        bgcolor=ft.Colors.WHITE,
+        shadow=ft.BoxShadow(blur_radius=15, color=ft.Colors.BLACK26),
+        alignment=ft.alignment.center,
+        padding=15,
+        content=ft.Column(
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=15,
+            controls=[
+                ft.Text("สุ่มอาหารกันเลย!", size=16, weight="bold", color=BRAND_ORANGE),
+                random_image,
+                random_name,
+            ],
+        ),
     )
 
-    pointer = ft.Icon(ft.Icons.ARROW_DROP_DOWN, color=BRAND_ORANGE, size=36)
-
     # ---------- ฟังก์ชันสุ่ม ----------
-    async def spin_wheel(e):
-        nonlocal current_angle
-        spin_target = current_angle + (360 * 5) + random.randint(0, 360)
-        result_index = int(((360 - (spin_target % 360)) / angle_per_seg) % num_segments)
-        selected_food = foods[result_index]
-        wheel_stack.rotate = ft.Rotate(angle=math.radians(spin_target))
-        wheel_stack.animate_rotation = ft.animation.Animation(2200, "easeOutCubic")
-        current_angle = spin_target
-        page.update()
-        await asyncio.sleep(2.3)
+    async def random_food(e):
+        # สุ่มจากข้อมูล JSON
+        food = random.choice(foods)
+        food_name = food["name"]
+        food_image = food["image"]
 
-        dlg = ft.AlertDialog(
-            modal=True,
-            title=ft.Text(selected_food["name"], weight="bold"),
-            content=ft.Image(src=f"assets/{selected_food['image']}", width=200, height=200),
-            actions=[ft.TextButton("ปิด", on_click=lambda e: page.close(dlg))],
-        )
-        page.dialog = dlg
-        dlg.open = True
+        # อัปเดตชื่อและรูป
+        random_name.value = food_name
+        random_image.src = f"photo/{food_image}"
         page.update()
+
+        # เอฟเฟกต์เด้งเบา ๆ
+        for scale in [1.0, 1.15, 0.9, 1.0]:
+            random_box.scale = ft.Scale(scale)
+            random_box.animate_scale = ft.animation.Animation(200, "easeOutBack")
+            page.update()
+            await asyncio.sleep(0.1)
 
     # ---------- ปุ่มสุ่ม ----------
     spin_button = ft.Container(
@@ -187,18 +175,14 @@ def build_spin_view(page: ft.Page):
                 ft.Text("สุ่มเลย !", size=18, weight="bold", color=ft.Colors.WHITE),
             ],
         ),
-        on_click=spin_wheel,
+        on_click=random_food,
     )
 
     # ---------- Layout ----------
-    wheel_section = ft.Column(
+    main_section = ft.Column(
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         spacing=20,
-        controls=[
-            ft.Container(content=pointer, alignment=ft.alignment.center),
-            wheel_stack,
-            spin_button,
-        ],
+        controls=[random_box, spin_button],
     )
 
     # ---------- Bottom nav ----------
@@ -208,7 +192,7 @@ def build_spin_view(page: ft.Page):
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
-                    ft.Image(src=icon, width=24, height=24),
+                    ft.Image(src=icon, width=24),
                     ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
                 ],
             ),
@@ -231,9 +215,10 @@ def build_spin_view(page: ft.Page):
 
     body = ft.Column(
         spacing=12,
-        controls=[header, top_buttons, feature_row, wheel_section, ft.Container(expand=True), bottom_nav],
+        controls=[header, top_buttons, feature_row, main_section, ft.Container(expand=True), bottom_nav],
     )
 
+    # ---------- BG ----------
     bg = ft.Container(
         width=PHONE_W,
         height=340,
