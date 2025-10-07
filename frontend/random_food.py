@@ -1,15 +1,13 @@
-import flet as ft 
+import flet as ft
 import json, os, random, asyncio
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
-
 def load_food_data():
     path = os.path.join(os.path.dirname(__file__), "data", "random_food.json")
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)["foods"]
-
 
 def build_spin_view(page: ft.Page):
     foods = load_food_data()
@@ -19,11 +17,7 @@ def build_spin_view(page: ft.Page):
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
         controls=[
-            ft.IconButton(
-                icon=ft.Icons.ARROW_BACK,
-                icon_color=ft.Colors.WHITE,
-                on_click=lambda e: page.go("/home"),
-            ),
+            ft.IconButton(icon=ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda e: page.go("/home")),
             ft.Image(src="logo.png", width=36, height=36),
             ft.IconButton(icon=ft.Icons.PERSON, icon_color=ft.Colors.WHITE),
         ],
@@ -58,12 +52,7 @@ def build_spin_view(page: ft.Page):
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     controls=[
                         ft.Image(src=icon_src, width=40, height=40),
-                        ft.Text(
-                            label,
-                            size=14,
-                            weight="bold" if active else "normal",
-                            color=BRAND_ORANGE if active else ft.Colors.BLACK87,
-                        ),
+                        ft.Text(label, size=14, weight="bold" if active else "normal", color=BRAND_ORANGE if active else ft.Colors.BLACK87),
                     ],
                 ),
             ),
@@ -109,13 +98,21 @@ def build_spin_view(page: ft.Page):
 
     # ---------- กล่องแสดงรูปสุ่ม ----------
     random_image = ft.Image(
-        src="photo/placeholder.png",  # รูปเริ่มต้น (สร้างไว้กัน error)
+        src="photo/qqq.jpg",
         width=220,
         height=220,
-        border_radius=16,
+        border_radius=20,
         fit=ft.ImageFit.COVER,
     )
-    random_name = ft.Text("", size=18, weight="bold", color=BRAND_ORANGE)
+
+    random_name = ft.Text(
+        "ยังไม่ได้สุ่มนะ ลองกดปุ่มด้านล่างเลย!",
+        size=16,
+        weight="bold",
+        color=BRAND_ORANGE,
+        text_align=ft.TextAlign.CENTER,
+    )
+
     random_box = ft.Container(
         width=300,
         height=320,
@@ -136,26 +133,21 @@ def build_spin_view(page: ft.Page):
         ),
     )
 
-    # ---------- ฟังก์ชันสุ่ม ----------
     async def random_food(e):
-        # สุ่มจากข้อมูล JSON
         food = random.choice(foods)
         food_name = food["name"]
         food_image = food["image"]
 
-        # อัปเดตชื่อและรูป
         random_name.value = food_name
         random_image.src = f"photo/{food_image}"
         page.update()
 
-        # เอฟเฟกต์เด้งเบา ๆ
         for scale in [1.0, 1.15, 0.9, 1.0]:
             random_box.scale = ft.Scale(scale)
             random_box.animate_scale = ft.animation.Animation(200, "easeOutBack")
             page.update()
             await asyncio.sleep(0.1)
 
-    # ---------- ปุ่มสุ่ม ----------
     spin_button = ft.Container(
         width=180,
         height=52,
@@ -178,11 +170,16 @@ def build_spin_view(page: ft.Page):
         on_click=random_food,
     )
 
-    # ---------- Layout ----------
-    main_section = ft.Column(
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        spacing=20,
-        controls=[random_box, spin_button],
+    # ---------- ส่วนกลาง ----------
+    main_section = ft.Container(
+        expand=True,
+        alignment=ft.alignment.center,
+        content=ft.Column(
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=25,
+            controls=[random_box, spin_button],
+        ),
     )
 
     # ---------- Bottom nav ----------
@@ -213,12 +210,18 @@ def build_spin_view(page: ft.Page):
         ),
     )
 
+    # ---------- Layout รวม ----------
     body = ft.Column(
-        spacing=12,
-        controls=[header, top_buttons, feature_row, main_section, ft.Container(expand=True), bottom_nav],
+        expand=True,
+        controls=[
+            header,
+            top_buttons,
+            feature_row,
+            main_section,
+            bottom_nav,
+        ],
     )
 
-    # ---------- BG ----------
     bg = ft.Container(
         width=PHONE_W,
         height=340,
@@ -233,7 +236,13 @@ def build_spin_view(page: ft.Page):
     phone_frame = ft.Stack(
         width=PHONE_W,
         height=PHONE_H,
-        controls=[bg, ft.Container(padding=ft.padding.symmetric(horizontal=12, vertical=10), content=body)],
+        controls=[
+            bg,
+            ft.Container(
+                padding=ft.padding.symmetric(horizontal=12, vertical=10),
+                content=body,
+            ),
+        ],
     )
 
     return ft.View(
