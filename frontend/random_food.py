@@ -142,19 +142,103 @@ def build_spin_view(page: ft.Page):
 
     # ---------- ฟังก์ชันสุ่ม ----------
     def on_spin(e):
-        # สลับเมนู 4 ครั้งก่อนสุ่มจริง
-        for i in range(4):
+        total_rounds = 10
+
+        # หมุนเร็ว 5 ครั้งแรก
+        for i in range(5):
             temp = random.choice(foods)
             random_image.src = f"photo/{temp['image']}"
             random_name.value = temp["name"]
             page.update()
-            time.sleep(0.2)
+            time.sleep(0.3)
+
+        # หมุนช้าลง 5 ครั้งหลัง
+        for i in range(5, total_rounds):
+            temp = random.choice(foods)
+            random_image.src = f"photo/{temp['image']}"
+            random_name.value = temp["name"]
+            page.update()
+            time.sleep(0.3 + (i - 4) * 0.1)
 
         # เมนูสุดท้ายจริง
         final_food = random.choice(foods)
         random_image.src = f"photo/{final_food['image']}"
         random_name.value = final_food["name"]
         page.update()
+
+        # ---------- popup ----------
+        popup = ft.Container(
+            bgcolor=ft.Colors.WHITE,
+            border_radius=20,
+            width=280,
+            height=360,
+            padding=20,
+            shadow=ft.BoxShadow(blur_radius=25, color=ft.Colors.BLACK26),
+            alignment=ft.alignment.center,
+            margin=ft.margin.only(top=80),
+            content=ft.Column(
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=15,
+                controls=[
+                    ft.Text("ผลการสุ่มอาหาร", size=18, weight="bold", color=BRAND_ORANGE),
+                    ft.Image(
+                        src=f"photo/{final_food['image']}",
+                        width=180,
+                        height=180,
+                        border_radius=12,
+                        fit=ft.ImageFit.COVER,
+                    ),
+                    ft.Text(final_food["name"], size=14, weight="bold", color=ft.Colors.BLACK),
+                    ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_AROUND,
+                        controls=[
+                            ft.ElevatedButton(
+                                text="สุ่มอีกครั้ง",
+                                bgcolor=BRAND_ORANGE,
+                                color=ft.Colors.WHITE,
+                                style=ft.ButtonStyle(
+                                    shape=ft.RoundedRectangleBorder(radius=16)
+                                ),
+                                on_click=lambda e: [remove_popup(), on_spin(e)],
+                            ),
+                            ft.ElevatedButton(
+                                text="ตกลง",
+                                bgcolor="#888888",
+                                color=ft.Colors.WHITE,
+                                style=ft.ButtonStyle(
+                                    shape=ft.RoundedRectangleBorder(radius=16)
+                                ),
+                                on_click=lambda e: remove_popup(),
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        )
+
+        overlay = ft.Container(
+            width=PHONE_W,
+            height=PHONE_H,
+            alignment=ft.alignment.center,
+            content=popup,
+        )
+
+        # ---------- ฟังก์ชันลบ popup ----------
+        def remove_popup():
+            if overlay in phone_frame.controls:
+                phone_frame.controls.remove(overlay)
+                page.update()
+
+        # เพิ่ม popup ลงไป (เช็กไม่ให้ซ้ำ)
+        if overlay not in phone_frame.controls:
+            phone_frame.controls.append(overlay)
+        page.update()
+
+
+
+
+
 
     # ---------- ปุ่มสุ่ม ----------
     spin_button = ft.Container(
