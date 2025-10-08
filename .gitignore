@@ -1,0 +1,34 @@
+# === Backend ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+*.log
+*.pid
+
+# === Database ===
+*.sql
+*.dump
+*.backup
+*.db
+*.sqlite3
+pgdata/
+postgres-data/
+data/
+database_data/
+
+# === Frontend ===
+node_modules/
+build/
+dist/
+
+# === Editor / OS ===
+.vscode/
+.DS_Store
+.idea/
+
+# === Docker ===
+*.sock
+docker-compose.override.yml
