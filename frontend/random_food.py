@@ -1,5 +1,7 @@
 import flet as ft
 import json, os, random, time
+from flet import Colors
+
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
@@ -275,33 +277,42 @@ def build_spin_view(page: ft.Page):
         ),
     )
 
-    # ---------- Bottom nav ----------
+        # ---------- Bottom nav ----------
     def nav_item(icon: str, label: str, route=None, active=False):
         return ft.GestureDetector(
             on_tap=lambda e: page.go(route) if route else None,
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=2,
                 controls=[
-                    ft.Image(src=icon, width=24),
-                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
+                    ft.Container(
+                        content=ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                        padding=ft.padding.only(top=2, bottom=2),
+                    ),
+                    ft.Text(
+                        label,
+                        size=10,
+                        color=BRAND_ORANGE if active else ft.Colors.BLACK87,
+                    ),
                 ],
             ),
         )
 
     bottom_nav = ft.Container(
         bgcolor=ft.Colors.WHITE,
-        border=ft.border.only(top=ft.BorderSide(1, ft.Colors.BLACK12)),
+        border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
         padding=10,
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_AROUND,
             controls=[
                 nav_item("home.png", "Home", route="/home"),
-                nav_item("history.png", "History"),
-                nav_item("review.png", "Review"),
-                nav_item("more.png", "More"),
+                nav_item("heart.png", "Favorite", route="/favorite"),
+                nav_item("review.png", "Review", route="/review"),
+                nav_item("more.png", "More", route="/more"),
             ],
         ),
     )
+
 
     # ---------- Layout รวม ----------
     body = ft.Column(

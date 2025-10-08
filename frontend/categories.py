@@ -1,6 +1,7 @@
 import flet as ft
 import json
 import os
+from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
@@ -164,29 +165,34 @@ def categories_view(page: ft.Page) -> ft.View:
     )
 
     # ---------- Bottom nav ----------
-    def nav_item(icon: str, label: str, active=False, on_click=None):
+    def nav_item(icon: str, label: str, route=None, active=False):
         return ft.GestureDetector(
-            on_tap=on_click or (lambda e: None),
+            on_tap=lambda e: page.go(route) if label == "Home" else None,
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=2,
                 controls=[
-                    ft.Image(src=icon, width=24, height=24),
+                    ft.Container(
+                        content=ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                        padding=ft.padding.only(top=2, bottom=2),
+                    ),
                     ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
                 ],
             ),
         )
 
     bottom_nav = ft.Container(
-        bgcolor=ft.Colors.WHITE,
-        border=ft.border.only(top=ft.BorderSide(1, ft.Colors.BLACK12)),
+        bgcolor=Colors.WHITE,
+        border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
         padding=10,
+        height=65,
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_AROUND,
             controls=[
-                nav_item("HOME.png", "Home", on_click=lambda e: page.go("/home")),
-                nav_item("history.png", "History"),
-                nav_item("Review.png", "Review"),
-                nav_item("More.png", "More"),
+                nav_item("home.png", "Home", route="/home"),
+                nav_item("heart.png", "Favorite"),
+                nav_item("review.png", "Review"),
+                nav_item("more.png", "More"),
             ],
         ),
     )
@@ -206,7 +212,7 @@ def categories_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- เพิ่มพื้นหลังไล่สี ----------
+    # ---------- พื้นหลังไล่สี ----------
     orange_gradient_bg = ft.Container(
         width=PHONE_W,
         height=340,
@@ -222,11 +228,12 @@ def categories_view(page: ft.Page) -> ft.View:
         width=PHONE_W,
         height=PHONE_H,
         controls=[
-            orange_gradient_bg,  # ✅ พื้นหลังส้มกลับมา
+            orange_gradient_bg,
             ft.Container(
                 padding=ft.padding.symmetric(horizontal=12),
                 content=ft.Column(
                     expand=True,
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     controls=[
                         ft.Container(expand=True, content=scrollable_area),
                         bottom_nav,
