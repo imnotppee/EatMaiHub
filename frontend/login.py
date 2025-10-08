@@ -42,12 +42,13 @@ def build_login_view(page: ft.Page) -> ft.View:
     password = ft.TextField(label="Password", width=340, password=True, can_reveal_password=True, border_color=BRAND_ORANGE)
 
     def on_login(e):
+        page.go("/home")
         page.snack_bar = ft.SnackBar(ft.Text("Logged in (mock)"))
         page.snack_bar.open = True
         page.update()
 
     def goto_signup(e): page.go("/signup")
-    def goto_forgot(e): page.go("/reset")  # ✅ ไปหน้า reset ก่อน
+    def goto_forgot(e): page.go("/reset")  # ไปหน้า reset ก่อน
 
     def google_login(e):
         page.snack_bar = ft.SnackBar(ft.Text("TODO: Google Sign-In"))
@@ -122,7 +123,7 @@ def build_login_view(page: ft.Page) -> ft.View:
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         vertical_alignment=ft.MainAxisAlignment.CENTER,
         controls=[
-        # พื้นหลังนอกกรอบ = ดำ
+            # พื้นหลังนอกกรอบ = ดำ
             ft.Container(
                 expand=True,
                 bgcolor=ft.Colors.BLACK,
@@ -132,8 +133,7 @@ def build_login_view(page: ft.Page) -> ft.View:
                     height=917,
                     bgcolor=ft.Colors.WHITE,   # กรอบมือถือ = ขาว
                     content=content,
-            ),
-        )
-    ],
-)
-
+                ),
+            )
+        ],
+    )

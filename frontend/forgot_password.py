@@ -51,9 +51,14 @@ def build_forgot_view(page: ft.Page) -> ft.View:   # ✅ แก้ชื่อ�
                 logo,
                 ft.Container(
                     width=340,
-                    alignment=ft.alignment.center_left,
-                    content=ft.Text("Enter your new password", size=18, weight=ft.FontWeight.W_700),
-                ),
+                    alignment=ft.alignment.center,   # ✅ จาก center_left → center
+                    content=ft.Text(
+                        "Enter your new password",
+                    size=18,
+                    weight=ft.FontWeight.W_700,
+                    text_align="center",         # ✅ ให้ข้อความจัดกลาง
+                        ),
+                    ),
                 ft.Container(height=12),
                 pass1, ft.Container(height=12),
                 pass2, ft.Container(height=18),

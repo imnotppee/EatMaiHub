@@ -1,0 +1,27 @@
+[
+  {
+    "image": "banner.png",
+    "name": "Urban street (สเต็กถาดปราบเซียน)",
+    "desc": "สเต็กและเบอร์เกอร์สุดชิลล์กลางลาดกระบัง"
+  },
+  {
+    "image": "banner2.png",
+    "name": "Sunbae Korean Restaurant",
+    "desc": "อาหารเกาหลี เกาใจ"
+  },
+  {
+    "image": "banner3.png",
+    "name": "Hotto Bun ลาดกระบัง ホットバン",
+    "desc": "ร้านญี่ปุ่นแฮนเมดพร้อมคาเฟ่สุดอบอุ่น"
+  },
+  {
+    "image": "banner4.png",
+    "name": "Sensei Ramen",
+    "desc": "ราเม็ง: ชามแห่งความสุขที่ลงตัว"
+  },
+  {
+    "image": "banner5.png",
+    "name": "MALATIME 麻辣烫",
+    "desc": "ร้าหมาล่าสุดแซ่บ เด็กลาดกระบังการันตี"
+  }
+]

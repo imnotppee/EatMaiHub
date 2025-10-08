@@ -35,7 +35,7 @@ def build_reset_view(page: ft.Page) -> ft.View:
     email = ft.TextField(label="Email", width=340, border_color=BRAND_ORANGE)
     otp   = ft.TextField(label="OTP",   width=340, border_color=BRAND_ORANGE)
 
-    def send_again(e):
+    def on_send(e):
         page.snack_bar = ft.SnackBar(ft.Text("OTP sent (mock)"))
         page.snack_bar.open = True
         page.update()
@@ -60,9 +60,20 @@ def build_reset_view(page: ft.Page) -> ft.View:
                 otp,
                 ft.Container(height=18),
 
-                ft.TextButton("Send again", on_click=send_again),
-                ft.Container(height=26),
+                # ✅ เปลี่ยนเป็นปุ่ม Send
+                ft.ElevatedButton(
+                    "Send",
+                    on_click=on_send,
+                    bgcolor=Colors.GREY,
+                    color=Colors.WHITE,
+                    style=ft.ButtonStyle(
+                        shape={"": ft.RoundedRectangleBorder(radius=28)},
+                        padding={"": 10},  # ขนาดพอดีข้อความ
+                        elevation={"": 0},
+                    ),
+                ),
 
+                ft.Container(height=26),
                 ft.ElevatedButton(
                     "Confirm",
                     on_click=on_confirm,
@@ -81,7 +92,7 @@ def build_reset_view(page: ft.Page) -> ft.View:
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         vertical_alignment=ft.MainAxisAlignment.CENTER,
         controls=[
-        # พื้นหลังนอกกรอบ = ดำ
+            # พื้นหลังนอกกรอบ = ดำ
             ft.Container(
                 expand=True,
                 bgcolor=ft.Colors.BLACK,
@@ -91,7 +102,7 @@ def build_reset_view(page: ft.Page) -> ft.View:
                     height=917,
                     bgcolor=ft.Colors.WHITE,   # กรอบมือถือ = ขาว
                     content=content,
-            ),
-        )
-    ],
-)
+                ),
+            )
+        ],
+    )
