@@ -1,13 +1,19 @@
 import flet as ft
 import json
 import os
+import random
 
+# ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
+
 def build_nearby_view(page: ft.Page) -> ft.View:
-    # ---------- โหลดข้อมูลจาก JSON ----------
-    data_path = os.path.join(os.path.dirname(__file__), "data", "nearby_data.json")
+    # ---------- โหลดข้อมูลร้านจาก nearby_restaurants.json ----------
+    data_path = os.path.join(os.path.dirname(__file__), "data", "nearby_restaurants.json")
+    if not os.path.exists(data_path):
+        raise FileNotFoundError("❌ ไม่พบไฟล์ data/nearby_restaurants.json")
+
     with open(data_path, "r", encoding="utf-8") as f:
         restaurants = json.load(f)
 
@@ -19,9 +25,10 @@ def build_nearby_view(page: ft.Page) -> ft.View:
             end=ft.alignment.bottom_center,
             colors=[BRAND_ORANGE, "#F6D0A0"],
         ),
-        padding=ft.padding.only(left=16, right=16, top=30, bottom=12),
+        padding=ft.padding.symmetric(horizontal=16, vertical=10),
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
                 ft.IconButton(
                     icon=ft.Icons.ARROW_BACK,
@@ -29,91 +36,107 @@ def build_nearby_view(page: ft.Page) -> ft.View:
                     bgcolor=ft.Colors.WHITE24,
                     icon_size=22,
                     on_click=lambda e: page.go("/home"),
+                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
                 ),
-                ft.Image(src="logo.png", width=100, height=60),
+                ft.Text("ร้านใกล้ฉัน", size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
                 ft.Container(width=36),
             ],
         ),
     )
 
-    # ---------- แผนที่ (Google Maps Embed) ----------
-    map_section = ft.Container(
-        width=PHONE_W - 20,
-        height=200,
-        border_radius=12,
-        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-        shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.BLACK26),
-        content=ft.IFrame(
-            src="https://www.google.com/maps/embed/v1/view?key=YOUR_GOOGLE_MAPS_API_KEY&center=13.729,100.775&zoom=14",
-            width=PHONE_W - 20,
-            height=200,
-        ),
+    # ---------- ปุ่มระบุตำแหน่ง (จำลองตำแหน่ง) ----------
+    async def get_location(e):
+        """
+        ✅ Desktop: ใช้พิกัดจำลอง (KMITL)
+        ✅ Web: ถ้ามี page.get_geolocation() ก็ใช้จริงได้
+        ✅ Backend: ภายหลังสามารถต่อ Google API ได้ที่นี่
+        """
+        try:
+            if hasattr(page, "get_geolocation"):
+                pos = await page.get_geolocation()
+                if pos:
+                    msg = f"📍 ตำแหน่งจริงของคุณ\nLat: {pos.latitude:.4f}, Lng: {pos.longitude:.4f}"
+                else:
+                    msg = "⚠️ ไม่สามารถดึงตำแหน่งจริงได้"
+            else:
+                # จำลองพิกัดมหาลัยลาดกระบัง
+                fake_lat = 13.7276 + random.uniform(-0.002, 0.002)
+                fake_lng = 100.7772 + random.uniform(-0.002, 0.002)
+                msg = f"📍 ตำแหน่งจำลอง: KMITL\nLat: {fake_lat:.4f}, Lng: {fake_lng:.4f}"
+
+            page.snack_bar = ft.SnackBar(content=ft.Text(msg), bgcolor=BRAND_ORANGE, duration=3000)
+            page.snack_bar.open = True
+            await page.update_async()
+        except Exception as ex:
+            page.snack_bar = ft.SnackBar(content=ft.Text(f"เกิดข้อผิดพลาด: {ex}"), bgcolor="red")
+            page.snack_bar.open = True
+            await page.update_async()
+
+    locate_button = ft.ElevatedButton(
+        text="📍 ระบุตำแหน่งของฉัน",
+        color=ft.Colors.WHITE,
+        bgcolor=BRAND_ORANGE,
+        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
+        on_click=get_location,
+    )
+
+    # ---------- หัวข้อ ----------
+    title = ft.Container(
+        padding=ft.padding.symmetric(horizontal=16, vertical=10),
+        content=ft.Text("แนะนำร้านใกล้คุณ 🍜", size=18, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
     )
 
     # ---------- การ์ดร้าน ----------
-    def restaurant_card(item):
+    def restaurant_card(r):
         return ft.Container(
             bgcolor=ft.Colors.WHITE,
             border_radius=12,
+            shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.BLACK12),
             padding=10,
-            margin=ft.margin.only(bottom=12),
-            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK12),
+            margin=ft.margin.only(bottom=16),
             content=ft.Row(
-                spacing=10,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
                     ft.Container(
-                        width=80,
-                        height=80,
+                        width=100,
+                        height=100,
                         border_radius=10,
-                        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-                        content=ft.Image(src=item.get("image", ""), fit=ft.ImageFit.COVER),
+                        clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                        content=ft.Image(src=r["image"], fit=ft.ImageFit.COVER),
                     ),
+                    ft.Container(width=12),
                     ft.Column(
-                        spacing=4,
                         alignment=ft.MainAxisAlignment.CENTER,
+                        spacing=6,
                         controls=[
-                            ft.Row(
-                                spacing=4,
-                                controls=[
-                                    ft.Icon(ft.Icons.STAR, color=BRAND_ORANGE, size=16),
-                                    ft.Text(f"{item['rating']} / {item['distance']} km", size=12),
-                                ],
-                            ),
-                            ft.Text(item["name"], size=14, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
-                            ft.Text(item["category"], size=12, color=ft.Colors.BLACK87),
-                            ft.ElevatedButton(
-                                text="ดูร้านนี้",
-                                bgcolor=BRAND_ORANGE,
-                                color="white",
-                                height=28,
-                                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
-                                on_click=lambda e: page.go(f"/{item['name'].lower().replace(' ', '')}"),
-                            ),
+                            ft.Text(r["name"], size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK),
+                            ft.Text(f"ประเภท: {r['type']}", size=12, color=ft.Colors.BLACK87),
+                            ft.Text(f"ระยะทาง: {r['distance']} กม.", size=12, color=ft.Colors.BLACK54),
                         ],
                     ),
                 ],
             ),
         )
 
+    # ---------- รายการร้าน ----------
     restaurant_list = ft.Column(
-        spacing=12,
-        controls=[restaurant_card(r) for r in restaurants],
+        scroll=ft.ScrollMode.ALWAYS,
+        controls=[restaurant_card(r) for r in sorted(restaurants, key=lambda x: x["distance"])],
     )
 
-    # ---------- รวมทุกส่วน ----------
+    # ---------- รวมเนื้อหา ----------
+    content_area = ft.Container(
+        padding=ft.padding.symmetric(horizontal=16, vertical=10),
+        content=ft.Column(spacing=12, controls=[locate_button, restaurant_list]),
+    )
+
+    # ---------- Body ----------
     body = ft.Container(
         width=PHONE_W,
         height=PHONE_H,
         bgcolor=ft.Colors.WHITE,
         content=ft.Column(
             scroll=ft.ScrollMode.ALWAYS,
-            controls=[
-                header,
-                ft.Container(padding=ft.padding.all(12), content=map_section),
-                ft.Container(padding=ft.padding.symmetric(horizontal=16), content=restaurant_list),
-                ft.Container(height=20),
-            ],
+            controls=[header, title, content_area],
         ),
     )
 
@@ -123,9 +146,9 @@ def build_nearby_view(page: ft.Page) -> ft.View:
         controls=[
             ft.Container(
                 expand=True,
-                bgcolor="black",
+                bgcolor=ft.Colors.BLACK,
                 alignment=ft.alignment.center,
-                content=body,
+                content=ft.Container(width=PHONE_W, height=PHONE_H, bgcolor=ft.Colors.WHITE, content=body),
             )
         ],
     )

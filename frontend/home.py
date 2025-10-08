@@ -3,6 +3,7 @@ from flet import Icons, Colors
 import json
 import os
 
+# ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
@@ -66,56 +67,61 @@ def build_home_view(page: ft.Page) -> ft.View:
                     controls=[
                         ft.Image(src=icon_src, width=40, height=40),
                         ft.Text(label, size=14),
-                ],
-            ),
-        ),
-    )
-
-
-    top_buttons = ft.Row(
-        alignment=ft.MainAxisAlignment.SPACE_AROUND,
-        controls=[
-            pill("star.png", "ร้านเด็ด", route="/highlight"),
-            pill("roll.png", "สุ่มอาหาร")
-        ],
-    )
-
-   
-
-
-    # ---------- Feature 4 อัน ----------
-    def feature(icon_src: str, label: str, route=None):
-        return ft.GestureDetector(
-            on_tap=lambda e: page.go(route) if route else None,
-            content=ft.Container(
-                bgcolor=Colors.WHITE,
-                border_radius=12,
-                padding=10,
-                width=(PHONE_W - 64) / 4,
-                shadow=ft.BoxShadow(blur_radius=8, color=Colors.BLACK12),
-                content=ft.Column(
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    spacing=6,
-                    controls=[
-                        ft.Image(src=icon_src, width=32, height=32),
-                        ft.Text(label, size=12),
                     ],
                 ),
             ),
         )
 
+    top_buttons = ft.Row(
+        alignment=ft.MainAxisAlignment.SPACE_AROUND,
+        controls=[
+            pill("star.png", "ร้านเด็ด", route="/highlight"),
+            pill("roll.png", "สุ่มอาหาร", route="/random")
+        ],
+    )
+
+    # ---------- Feature 4 อัน (รวมฟีเจอร์ทั้งสองเวอร์ชัน) ----------
+    def feature(icon_src: str, label: str, route=None, on_click=None):
+        """
+        ฟังก์ชันนี้รองรับทั้ง:
+        - route="/path" เพื่อให้ page.go() ไปหน้าใหม่
+        - on_click=lambda e: ... เพื่อใส่ฟังก์ชันเอง
+        """
+        # ถ้ามี route ให้สร้าง handler ไปหน้านั้น ถ้ามี on_click ให้ใช้เอง
+        handler = on_click or (lambda e: page.go(route) if route else None)
+
+        return ft.GestureDetector(
+            on_tap=handler,
+            content=ft.Container(
+                bgcolor=ft.Colors.WHITE,
+                border_radius=12,
+                padding=10,
+                width=(PHONE_W - 64) / 4,
+                shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.BLACK12),
+                content=ft.Column(
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=6,
+                    controls=[
+                        ft.Image(src=icon_src, width=32, height=32),
+                        ft.Text(label, size=12, color=ft.Colors.BLACK87),
+                    ],
+                ),
+            ),
+        )
+
+
     feature_row = ft.Row(
-    alignment=ft.MainAxisAlignment.SPACE_AROUND,
-    controls=[
-        feature("ball.png", "กินตามดวง", route="/horoscope"),
-        feature("pin.png", "ร้านใกล้ฉัน", route="/nearby"),
-        feature("Category.png", "หมวดหมู่"),
-        feature("palette.png", "กินตามสีวัน"),
-    ],
-)
+        alignment=ft.MainAxisAlignment.SPACE_AROUND,
+        controls=[
+            feature("ball.png", "กินตามดวง", route="/horoscope"),
+            feature("pin.png", "ร้านใกล้ฉัน", route="/nearby"),
+            feature("category.png", "หมวดหมู่", on_click=lambda e: page.go("/categories")),
+            feature("palette.png", "กินตามสีวัน"),
+        ],
+    )
 
 
-         # ---------- ร้านเด็ด (Banner slide ทีละรูป + จุด indicator) ----------
+    # ---------- ร้านเด็ด (Banner slide ทีละรูป + จุด indicator) ----------
     highlight_title = ft.Row(
         alignment=ft.MainAxisAlignment.START,
         controls=[
@@ -137,14 +143,14 @@ def build_home_view(page: ft.Page) -> ft.View:
         height=180,
     )
 
-    # จุด indicator ด้านล่าง
+    # จุด indicator
     dots = ft.Row(
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=6,
         controls=[
             ft.Container(
                 width=8, height=8, border_radius=20,
-                bgcolor=BRAND_ORANGE if i == current_index else ft.Colors.BLACK26
+                bgcolor=BRAND_ORANGE if i == current_index else ft.Colors.BLACK26,
             )
             for i in range(len(banners))
         ],
@@ -179,14 +185,17 @@ def build_home_view(page: ft.Page) -> ft.View:
         drag_start_x["value"] = None
         drag_last_x["value"] = None
 
-    # ✅ เพิ่มให้กด banner แล้วไปหน้า urban
+    # ✅ เพิ่มให้กด banner แล้วไปหน้าอื่น
+        # ✅ รวมฟังก์ชัน on_banner_tap() ให้รองรับทุกแบนเนอร์
     def on_banner_tap(e):
         if current_index == 0:
             page.go("/urban")  # banner แรก → Urban Street
         elif current_index == 1:
             page.go("/sunbae")  # banner ที่สอง → Sunbae Korean Restaurant
         elif current_index == 2:
-            page.go("/hottobun")   # banner สาม → Hotto Bun
+            page.go("/hottobun")  # banner ที่สาม → Hotto Bun
+        else:
+            page.go("/highlight")  # fallback ถ้า index เกิน
 
 
     highlight_banner = ft.Column(
@@ -206,11 +215,11 @@ def build_home_view(page: ft.Page) -> ft.View:
                     content=banner_image,
                 ),
             ),
-            dots
+            dots,
         ],
     )
 
-    # ---------- การ์ดอาหาร (จาก foods.json) ----------
+    # ---------- การ์ดอาหาร ----------
     card_w, card_h = 120, 160
 
     def food_card(img: str, title: str, subtitle: str):
@@ -281,10 +290,10 @@ def build_home_view(page: ft.Page) -> ft.View:
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_AROUND,
             controls=[
-                nav_item("HOME.png", "Home", active=True),
+                nav_item("home.png", "Home", active=True),
                 nav_item("history.png", "History"),
-                nav_item("Review.png", "Review"),
-                nav_item("More.png", "More"),
+                nav_item("review.png", "Review"),
+                nav_item("more.png", "More"),
             ],
         ),
     )

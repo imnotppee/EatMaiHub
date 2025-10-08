@@ -1,23 +1,28 @@
 import flet as ft
 
 # ===== import views =====
+# ===== import views =====
 from login import build_login_view
 from signup import build_signup_view
 from reset_password import build_reset_view
 from forgot_password import build_forgot_view
 from home import build_home_view
+from categories import categories_view
 from highlight_view import build_highlight_view
 from urban_view import build_urban_view
 from sunbae_view import build_sunbae_view
 from hottobun_view import build_hottobun_view
 from horoscope_view import build_horoscope_view
+from random_food import build_spin_view
+from nearby_view import build_nearby_view
+
 
 
 def main(page: ft.Page):
     # ---------- window & page look ----------
     page.title = "EATMAIHUB"
 
-    page.bgcolor = ft.Colors.BLACK
+    page.bgcolor = ft.Colors.BLACK         # พื้นหลังรอบเฟรม
     page.padding = 0
     page.margin = 0
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
@@ -36,7 +41,7 @@ def main(page: ft.Page):
     except Exception:
         pass
 
-    # ---------- router ----------
+        # ---------- router ----------
     def route_change(e: ft.RouteChangeEvent):
         page.views.clear()
         r = page.route
@@ -49,18 +54,25 @@ def main(page: ft.Page):
             page.views.append(build_forgot_view(page))
         elif r == "/home":
             page.views.append(build_home_view(page))
-        elif r == "/highlight":
+        elif r == "/categories":   # ✅ หน้าแสดงหมวดหมู่
+            page.views.append(categories_view(page))
+        elif r == "/highlight":    # ✅ ร้านเด็ด
             page.views.append(build_highlight_view(page))
-        elif r == "/urban":
+        elif r == "/urban":        # ✅ Urban Street
             page.views.append(build_urban_view(page))
-        elif r == "/sunbae":
+        elif r == "/sunbae":       # ✅ Sunbae Korean Restaurant
             page.views.append(build_sunbae_view(page))
-        elif r == "/hottobun":                           # ✅ เพิ่มตรงนี้
+        elif r == "/hottobun":     # ✅ Hotto Bun
             page.views.append(build_hottobun_view(page))
-        elif r == "/horoscope":
+        elif r == "/horoscope":    # ✅ กินตามดวง
             page.views.append(build_horoscope_view(page))
+        elif r == "/random":       # ✅ สุ่มอาหาร
+            page.views.append(build_spin_view(page))
+        elif r == "/nearby":
+            page.views.append(build_nearby_view(page))
+
         else:
-            page.views.append(build_login_view(page))
+            page.views.append(build_login_view(page))  # ✅ default = หน้า Login
 
         page.update()
 
@@ -77,5 +89,5 @@ def main(page: ft.Page):
     page.go(page.route or "/")
 
 
-# เสิร์ฟไฟล์รูปจากโฟลเดอร์ photo (เช่น logo.png, google.png, …)
+# เสิร์ฟไฟล์รูปจากโฟลเดอร์ photo
 ft.app(target=main, assets_dir="photo")
