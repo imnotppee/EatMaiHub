@@ -1,0 +1,33 @@
+[
+    {
+      "name": "ข้าวมันไก่เจ๊แดง",
+      "type": "อาหารจานเดียว",
+      "distance": 0.5,
+      "image": "food1.png"
+    },
+    {
+      "name": "ส้มตำป้าแมว",
+      "type": "อีสานแท้",
+      "distance": 0.8,
+      "image": "food4.jpg"
+    },
+    {
+      "name": "ราเมง KMITL",
+      "type": "ญี่ปุ่น",
+      "distance": 1.2,
+      "image": "food6.jpg"
+    },
+    {
+      "name": "กะเพราหมูสับ K-Tech",
+      "type": "อาหารตามสั่ง",
+      "distance": 1.6,
+      "image": "food2.png"
+    },
+    {
+      "name": "ชาบูบุฟเฟ่ต์หน้ามอ",
+      "type": "บุฟเฟ่ต์",
+      "distance": 1.9,
+      "image": "food7.jpg"
+    }
+  ]
+  

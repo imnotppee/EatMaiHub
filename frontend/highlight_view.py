@@ -26,7 +26,7 @@ def build_highlight_view(page: ft.Page) -> ft.View:
                 style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
             ),
             ft.Image(src="logo.png", width=150, height=90),
-            ft.Container(width=36),  # ช่องว่างแทนปุ่มขวา
+            ft.Container(width=36),
         ],
     )
 
@@ -65,7 +65,7 @@ def build_highlight_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- การ์ดแต่ละร้าน ----------
+    # ---------- ฟังก์ชันสร้างการ์ดร้าน ----------
     def restaurant_card(img, name, desc, route=None):
         """สร้างการ์ดร้านพร้อมคลิกได้"""
         return ft.GestureDetector(
@@ -92,22 +92,24 @@ def build_highlight_view(page: ft.Page) -> ft.View:
             ),
         )
 
-# ---------- สร้างรายการร้านทั้งหมด ----------
-    restaurant_list = ft.Column(
-        spacing=12,
-        controls=[
-            restaurant_card(
-                r["image"],
-                r["name"],
-                r["desc"],
-                route="/urban" if r["name"] == "Urban Street" 
-                else "/sunbae" if r["name"] == "Sunbae Korean Restaurant" 
-                else None
-            )
-            for r in restaurants
-        ],
-    )
+    # ---------- สร้างรายการร้านทั้งหมด ----------
+    restaurant_list = ft.Column(spacing=12, controls=[])
 
+    for r in restaurants:
+        name_lower = r["name"].lower()
+
+        if "urban" in name_lower:
+            route = "/urban"
+        elif "sunbae" in name_lower:
+            route = "/sunbae"
+        elif "hotto bun" in name_lower:
+            route = "/hottobun"
+        else:
+            route = None
+
+        restaurant_list.controls.append(
+            restaurant_card(r["image"], r["name"], r["desc"], route)
+        )
 
     # ---------- เนื้อหาหลัก ----------
     body = ft.Container(
