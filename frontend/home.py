@@ -80,10 +80,18 @@ def build_home_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- แถว Feature 4 อัน ----------
-    def feature(icon_src: str, label: str, on_click=None):
+    # ---------- Feature 4 อัน (รวมฟีเจอร์ทั้งสองเวอร์ชัน) ----------
+    def feature(icon_src: str, label: str, route=None, on_click=None):
+        """
+        ฟังก์ชันนี้รองรับทั้ง:
+        - route="/path" เพื่อให้ page.go() ไปหน้าใหม่
+        - on_click=lambda e: ... เพื่อใส่ฟังก์ชันเอง
+        """
+        # ถ้ามี route ให้สร้าง handler ไปหน้านั้น ถ้ามี on_click ให้ใช้เอง
+        handler = on_click or (lambda e: page.go(route) if route else None)
+
         return ft.GestureDetector(
-            on_tap=on_click or (lambda e: None),  # ✅ ป้องกัน error ถ้าไม่ส่ง handler
+            on_tap=handler,
             content=ft.Container(
                 bgcolor=ft.Colors.WHITE,
                 border_radius=12,
@@ -95,21 +103,23 @@ def build_home_view(page: ft.Page) -> ft.View:
                     spacing=6,
                     controls=[
                         ft.Image(src=icon_src, width=32, height=32),
-                        ft.Text(label, size=12),
+                        ft.Text(label, size=12, color=ft.Colors.BLACK87),
                     ],
                 ),
             ),
         )
 
+
     feature_row = ft.Row(
         alignment=ft.MainAxisAlignment.SPACE_AROUND,
         controls=[
-            feature("ball.png", "กินตามดวง"),
-            feature("pin.png", "ร้านใกล้ฉัน"),
+            feature("ball.png", "กินตามดวง", route="/horoscope"),
+            feature("pin.png", "ร้านใกล้ฉัน", route="/nearby"),
             feature("category.png", "หมวดหมู่", on_click=lambda e: page.go("/categories")),
             feature("palette.png", "กินตามสีวัน"),
         ],
     )
+
 
     # ---------- ร้านเด็ด (Banner slide ทีละรูป + จุด indicator) ----------
     highlight_title = ft.Row(
@@ -176,13 +186,17 @@ def build_home_view(page: ft.Page) -> ft.View:
         drag_last_x["value"] = None
 
     # ✅ เพิ่มให้กด banner แล้วไปหน้าอื่น
+        # ✅ รวมฟังก์ชัน on_banner_tap() ให้รองรับทุกแบนเนอร์
     def on_banner_tap(e):
         if current_index == 0:
-            page.go("/urban")
+            page.go("/urban")  # banner แรก → Urban Street
         elif current_index == 1:
-            page.go("/sunbae")
+            page.go("/sunbae")  # banner ที่สอง → Sunbae Korean Restaurant
+        elif current_index == 2:
+            page.go("/hottobun")  # banner ที่สาม → Hotto Bun
         else:
-            page.go("/highlight")
+            page.go("/highlight")  # fallback ถ้า index เกิน
+
 
     highlight_banner = ft.Column(
         spacing=6,
@@ -245,7 +259,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         controls=[
             ft.Image(src="ball.png", width=22, height=22),
             ft.Container(width=6),
-            ft.Text("กินตามดวงวันนี้", size=16, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
+            ft.Text("กินตามดวงของแต่ละวัน", size=16, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
         ],
     )
 

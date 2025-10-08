@@ -4,5 +4,10 @@ flet
 # Backend
 fastapi
 uvicorn[standard]
+python-dotenv
+requests
+sqlalchemy
+psycopg2-binary
+
 
 # Database
