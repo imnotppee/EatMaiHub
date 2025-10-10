@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import RedirectResponse, JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -9,13 +9,28 @@ from dotenv import load_dotenv
 
 # ==== LOCAL IMPORTS ====
 from database import SessionLocal, engine
-from models import Base, User
+# 🔥 เพิ่มตรงนี้
+from models import (
+    Base,
+    User,
+    Restaurant,
+    Category,
+    Menu,
+    Review,
+    Favorite,
+    History,
+    ZodiacRecommendation,
+)
 
 # โหลดค่า environment variables
 load_dotenv()
 
 # ==== INITIALIZE APP ====
 app = FastAPI()
+
+# ✅ (DEV MODE) ลบตารางเก่าก่อนสร้างใหม่ (กัน foreign key error)
+# ⚠️ ทำเฉพาะตอนพัฒนา ห้ามใช้ใน production
+Base.metadata.drop_all(bind=engine)
 
 # ✅ สร้างตารางอัตโนมัติ ถ้ายังไม่มี
 Base.metadata.create_all(bind=engine)
@@ -44,47 +59,45 @@ def login_with_google():
 
 @app.get("/auth/google/callback")
 def google_callback(request: Request, code: str):
-    # 1️⃣ ขอ access token จาก Google
-    token_res = requests.post(
-        "https://oauth2.googleapis.com/token",
-        data={
-            "code": code,
-            "client_id": os.getenv("GOOGLE_CLIENT_ID"),
-            "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
-            "redirect_uri": os.getenv("REDIRECT_URI"),
-            "grant_type": "authorization_code",
-        },
-    )
-
-    token_json = token_res.json()
-    access_token = token_json.get("access_token")
-
-    # 2️⃣ ดึงข้อมูลผู้ใช้จาก Google
-    user_info_res = requests.get(
-        "https://www.googleapis.com/oauth2/v1/userinfo",
-        params={"access_token": access_token},
-    )
-    user_info = user_info_res.json()
-
-    # 3️⃣ เชื่อมฐานข้อมูล
-    db = SessionLocal()
-    existing_user = db.query(User).filter(User.google_id == user_info["id"]).first()
-
-    if not existing_user:
-        new_user = User(
-            google_id=user_info["id"],
-            name=user_info["name"],
-            email=user_info["email"],
-            picture=user_info["picture"]
+    try:
+        token_res = requests.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+                "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
+                "redirect_uri": os.getenv("REDIRECT_URI"),
+                "grant_type": "authorization_code",
+            },
         )
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        db.close()
-        return JSONResponse(content={"message": "🎉 New user added!", "user": user_info})
-    else:
-        db.close()
-        return JSONResponse(content={"message": "👋 Welcome back!", "user": user_info})
+        token_json = token_res.json()
+        access_token = token_json.get("access_token")
+
+        user_info_res = requests.get(
+            "https://www.googleapis.com/oauth2/v1/userinfo",
+            params={"access_token": access_token},
+        )
+        user_info = user_info_res.json()
+
+        db = SessionLocal()
+        existing_user = db.query(User).filter(User.email == user_info["email"]).first()
+
+        if not existing_user:
+            new_user = User(
+                username=user_info.get("name"),
+                email=user_info.get("email"),
+                password="",
+            )
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+            db.close()
+            return JSONResponse(content={"message": "🎉 New user added!", "user": user_info})
+        else:
+            db.close()
+            return JSONResponse(content={"message": "👋 Welcome back!", "user": user_info})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"OAuth failed: {str(e)}")
 
 
 # ------------------ TEST DATABASE ------------------
@@ -102,8 +115,6 @@ def test_database():
 
 # ------------------ CRUD TEST ------------------
 
-from pydantic import BaseModel
-
 class UserCreate(BaseModel):
     username: str
     password: str
@@ -118,7 +129,7 @@ def add_user(user: UserCreate):
     db.commit()
     db.refresh(new_user)
     db.close()
-    return {"message": "✅ User added successfully!", "user": {"id": new_user.id, "username": new_user.username}}
+    return {"message": "✅ User added successfully!", "user": {"id": new_user.user_id, "username": new_user.username}}
 
 
 @app.get("/get-users")
@@ -126,13 +137,13 @@ def get_users():
     db = SessionLocal()
     users = db.query(User).all()
     db.close()
-    return {"users": [{"id": u.id, "username": u.username, "email": u.email} for u in users]}
+    return {"users": [{"id": u.user_id, "username": u.username, "email": u.email} for u in users]}
 
 
 @app.delete("/delete-user/{user_id}")
 def delete_user(user_id: int):
     db = SessionLocal()
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.user_id == user_id).first()
     if user:
         db.delete(user)
         db.commit()
@@ -140,4 +151,3 @@ def delete_user(user_id: int):
         return {"message": "🗑️ User deleted!"}
     db.close()
     return {"error": "❌ User not found"}
-
