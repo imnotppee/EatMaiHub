@@ -92,3 +92,4 @@ DATABASE_URL=postgresql://user:password@localhost:5432/eatmaihub
 - Regularly update dependencies in `requirements.txt` as needed.
 - Use Postman or similar tools to test API endpoints.
 - DM me on Discord Group if you need help and need env keys!
+- Keep this cheat sheet updated as the project evolves.
