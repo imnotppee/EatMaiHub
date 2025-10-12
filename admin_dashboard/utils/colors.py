@@ -1,0 +1,5 @@
+# สีหลักเหมือนแอป EatMaiHub
+BRAND_ORANGE = "#DC7A00"
+BRAND_BROWN = "#7A4E1D"
+BG_LIGHT = "#FFFFFF"
+BORDER_COLOR = "#CCCCCC"
