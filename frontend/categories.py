@@ -190,7 +190,7 @@ def categories_view(page: ft.Page) -> ft.View:
             alignment=ft.MainAxisAlignment.SPACE_AROUND,
             controls=[
                 nav_item("home.png", "Home", route="/home"),
-                nav_item("heart.png", "Favorite"),
+                nav_item("heart.png", "Favorite", route="/favorite"),
                 nav_item("review.png", "Review"),
                 nav_item("more.png", "More"),
             ],
