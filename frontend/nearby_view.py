@@ -2,6 +2,7 @@ import flet as ft
 import json
 import os
 import random
+from flet import Colors
 
 # ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
@@ -129,33 +130,30 @@ def build_nearby_view(page: ft.Page) -> ft.View:
         ),
     )
 
-    # ---------- Bottom Navigation ----------
+    # ---------- Bottom nav ----------
     def nav_item(icon: str, label: str, route=None, active=False):
         return ft.GestureDetector(
-            on_tap=lambda e: page.go(route) if label == "Home" else None,
+            on_tap=lambda e: page.go(route) if route else None,
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=2,
                 controls=[
-                    ft.Container(
-                        content=ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
-                        padding=ft.padding.only(top=2, bottom=2),
-                    ),
+                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
                     ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
                 ],
             ),
         )
 
     bottom_nav = ft.Container(
-        bgcolor=ft.Colors.WHITE,
-        border=ft.border.only(top=ft.BorderSide(1, ft.Colors.BLACK12)),
+        bgcolor=Colors.WHITE,
+        border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
         padding=10,
         height=65,
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_AROUND,
             controls=[
                 nav_item("home.png", "Home", route="/home"),
-                nav_item("heart.png", "Favorite"),
+                nav_item("heart.png", "Favorite", route="/favorite"),
                 nav_item("review.png", "Review"),
                 nav_item("more.png", "More"),
             ],

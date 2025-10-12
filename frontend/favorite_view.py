@@ -80,24 +80,6 @@ def build_favorite_view(page: ft.Page) -> ft.View:
         ),
     )
 
-    # ---------- หัวข้อย่อย ----------
-    fav_title = ft.Container(
-        bgcolor="#FFF8F0",
-        padding=ft.padding.symmetric(horizontal=16, vertical=12),
-        content=ft.Row(
-            controls=[
-                ft.Text(
-                    "กินตามร้านเด็ด",
-                    size=14,
-                    weight=ft.FontWeight.BOLD,
-                    color=BRAND_ORANGE,
-                ),
-                ft.Container(width=4),
-                ft.Image(src="star.png", width=18, height=18),
-            ],
-        ),
-    )
-
     # ---------- การ์ดโปรด ----------
     def favorite_card(item):
         heart_icon = ft.Icon(
@@ -120,14 +102,12 @@ def build_favorite_view(page: ft.Page) -> ft.View:
             def fade():
                 for i in range(10, -1, -1):
                     card.opacity = i / 10
-                    page.update()  # ✅ ใช้ update() ตรง ๆ แทน call_from_thread
+                    page.update()
                     time.sleep(0.02)
 
                 nonlocal favorites
                 favorites[:] = [f for f in favorites if f["title"] != item["title"]]
                 save_favorites(favorites)
-
-                # ✅ รีโหลดหน้าใหม่ใน thread หลัก
                 page.update()
                 page.go("/favorite")
 
@@ -230,7 +210,7 @@ def build_favorite_view(page: ft.Page) -> ft.View:
             ft.Column(
                 expand=True,
                 scroll=ft.ScrollMode.ALWAYS,
-                controls=[header, fav_title, scroll_area, ft.Container(height=80)],
+                controls=[header, scroll_area, ft.Container(height=80)],
             ),
             ft.Container(bottom=0, left=0, right=0, content=bottom_nav),
         ],

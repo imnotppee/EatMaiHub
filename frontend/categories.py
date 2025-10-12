@@ -5,6 +5,21 @@ from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
+FAV_PATH = os.path.join(os.path.dirname(__file__), "data", "favorite.json")
+
+
+# ---------- โหลด / บันทึก Favorites ----------
+def load_favorites():
+    if os.path.exists(FAV_PATH):
+        with open(FAV_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
+
+
+def save_favorites(favorites):
+    os.makedirs(os.path.dirname(FAV_PATH), exist_ok=True)
+    with open(FAV_PATH, "w", encoding="utf-8") as f:
+        json.dump(favorites, f, ensure_ascii=False, indent=2)
 
 
 # ---------- โหลด JSON ----------
@@ -24,6 +39,7 @@ def categories_view(page: ft.Page) -> ft.View:
 
     data = load_data(data_map[current_category][0])
     foods = data.get(data_map[current_category][1], [])
+    favorites = load_favorites()
 
     # ---------- Header ----------
     header_row = ft.Row(
@@ -50,62 +66,96 @@ def categories_view(page: ft.Page) -> ft.View:
         content=ft.Column(spacing=12, controls=[header_row, search]),
     )
 
-    # ---------- การ์ดร้านอาหาร ----------
+    # ---------- การ์ดร้านอาหาร + หัวใจ Favorite ----------
     def build_food_list(food_items):
         cards = []
+
         for f in food_items:
-            cards.append(
-                ft.Container(
-                    bgcolor=ft.Colors.WHITE,
-                    border_radius=22,
-                    padding=18,
-                    margin=ft.margin.symmetric(vertical=10, horizontal=8),
-                    shadow=ft.BoxShadow(
-                        blur_radius=15,
-                        spread_radius=1,
-                        color=ft.Colors.with_opacity(0.15, ft.Colors.BLACK),
-                    ),
-                    height=150,
-                    content=ft.Row(
-                        spacing=14,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        controls=[
-                            ft.Container(
-                                width=110,
-                                height=110,
-                                border_radius=12,
-                                clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-                                content=ft.Image(
-                                    src=f"assets/{f['image']}",
-                                    fit=ft.ImageFit.COVER,
-                                ),
-                            ),
-                            ft.Column(
-                                alignment=ft.MainAxisAlignment.CENTER,
-                                horizontal_alignment=ft.CrossAxisAlignment.START,
-                                spacing=6,
-                                controls=[
-                                    ft.Text(f"ชื่อร้าน : {f['name']}", size=16, weight="bold", color=ft.Colors.BLACK87),
-                                    ft.Row(
-                                        spacing=5,
-                                        controls=[
-                                            ft.Icon(name=ft.Icons.STAR_ROUNDED, color=BRAND_ORANGE, size=18),
-                                            ft.Text(f"รีวิว : {f['rating']} ดาว", size=14, color=BRAND_ORANGE),
-                                        ],
-                                    ),
-                                    ft.Row(
-                                        spacing=5,
-                                        controls=[
-                                            ft.Icon(name=ft.Icons.LOCATION_ON_ROUNDED, color="#FF6F61", size=18),
-                                            ft.Text(f"ที่อยู่ : {f['address']}", size=13, color=ft.Colors.BLACK54),
-                                        ],
-                                    ),
-                                ],
-                            ),
-                        ],
-                    ),
-                )
+            is_fav = any(fav["name"] == f["name"] for fav in favorites)
+            heart_icon = ft.Image(
+                src="heart.png" if is_fav else "heart_border.png",
+                width=26,
+                height=26,
             )
+
+            def toggle_favorite(e, food=f, heart=heart_icon):
+                current_favorites = load_favorites()
+                if any(fav["name"] == food["name"] for fav in current_favorites):
+                    # ลบออกจาก favorite
+                    current_favorites = [fav for fav in current_favorites if fav["name"] != food["name"]]
+                    heart.src = "heart_border.png"
+                else:
+                    # เพิ่มเข้า favorite
+                    current_favorites.append(
+                        {
+                            "title": food["name"],
+                            "category": current_category,
+                            "image": f"assets/{food['image']}",
+                            "time": food.get("time", ""),
+                        }
+                    )
+                    heart.src = "heart.png"
+                save_favorites(current_favorites)
+                heart.update()
+
+            card = ft.Container(
+                bgcolor=ft.Colors.WHITE,
+                border_radius=22,
+                padding=18,
+                margin=ft.margin.symmetric(vertical=10, horizontal=8),
+                shadow=ft.BoxShadow(
+                    blur_radius=15,
+                    spread_radius=1,
+                    color=ft.Colors.with_opacity(0.15, ft.Colors.BLACK),
+                ),
+                height=150,
+                content=ft.Row(
+                    spacing=14,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Container(
+                            width=110,
+                            height=110,
+                            border_radius=12,
+                            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+                            content=ft.Image(
+                                src=f"assets/{f['image']}",
+                                fit=ft.ImageFit.COVER,
+                            ),
+                        ),
+                        ft.Column(
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            horizontal_alignment=ft.CrossAxisAlignment.START,
+                            spacing=6,
+                            expand=True,
+                            controls=[
+                                ft.Row(
+                                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                                    controls=[
+                                        ft.Text(f"ชื่อร้าน : {f['name']}", size=16, weight="bold", color=ft.Colors.BLACK87),
+                                        ft.GestureDetector(on_tap=toggle_favorite, content=heart_icon),
+                                    ],
+                                ),
+                                ft.Row(
+                                    spacing=5,
+                                    controls=[
+                                        ft.Icon(name=ft.Icons.STAR_ROUNDED, color=BRAND_ORANGE, size=18),
+                                        ft.Text(f"รีวิว : {f['rating']} ดาว", size=14, color=BRAND_ORANGE),
+                                    ],
+                                ),
+                                ft.Row(
+                                    spacing=5,
+                                    controls=[
+                                        ft.Icon(name=ft.Icons.LOCATION_ON_ROUNDED, color="#FF6F61", size=18),
+                                        ft.Text(f"ที่อยู่ : {f['address']}", size=13, color=ft.Colors.BLACK54),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            )
+            cards.append(card)
         return cards
 
     food_list_column = ft.Column(spacing=12, scroll=ft.ScrollMode.AUTO, expand=True, controls=build_food_list(foods))
@@ -167,15 +217,12 @@ def categories_view(page: ft.Page) -> ft.View:
     # ---------- Bottom nav ----------
     def nav_item(icon: str, label: str, route=None, active=False):
         return ft.GestureDetector(
-            on_tap=lambda e: page.go(route) if label == "Home" else None,
+            on_tap=lambda e: page.go(route) if route else None,
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=2,
                 controls=[
-                    ft.Container(
-                        content=ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
-                        padding=ft.padding.only(top=2, bottom=2),
-                    ),
+                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
                     ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
                 ],
             ),
