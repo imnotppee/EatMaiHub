@@ -17,62 +17,56 @@ def main(page: ft.Page):
     page.window_height = 900
     page.scroll = ft.ScrollMode.AUTO
 
-    # ---------- State สำหรับหน้า ----------
+    # ---------- State ----------
     current_view = {"value": "dashboard"}
 
     # ---------- ฟังก์ชันเปลี่ยนหน้า ----------
     def update_view(view_name: str):
-        """เปลี่ยนคอนเทนต์เมื่อกดเมนู Sidebar"""
+        """เปลี่ยนหน้าและอัปเดต Sidebar"""
         current_view["value"] = view_name
 
-        # อัปเดตเนื้อหาตามหน้า
+        # ✅ โหลดเนื้อหาตามชื่อ view
         if view_name == "dashboard":
-            content_area.content = ft.Column(
-                [
-                    create_topbar(page, "Dashboard"),
-                    dashboard_view(page),
-                ],
-                spacing=0,
-            )
+            topbar_title = "Dashboard"
+            view_content = dashboard_view(page)
         elif view_name == "manage_user":
-            content_area.content = ft.Column(
-                [
-                    create_topbar(page, "Manage User"),
-                    manage_user_view(page),
-                ],
-                spacing=0,
-            )
+            topbar_title = "Manage User"
+            view_content = manage_user_view(page)
         elif view_name == "edit_features":
-            content_area.content = ft.Column(
-                [
-                    create_topbar(page, "Edit Features"),
-                    edit_features_view(page),
-                ],
-                spacing=0,
-            )
+            topbar_title = "Edit Features"
+            view_content = edit_features_view(page)
         elif view_name == "admin":
-            content_area.content = ft.Column(
-                [
-                    create_topbar(page, "Admin"),
-                    admin_view(page),
-                ],
-                spacing=0,
-            )
+            topbar_title = "Admin"
+            view_content = admin_view(page)
+        else:
+            topbar_title = "Dashboard"
+            view_content = dashboard_view(page)
 
-        # อัปเดต Sidebar ให้ Active หน้าปัจจุบัน
-        sidebar_container.content = create_sidebar(page, view_name, update_view)
+        # ✅ อัปเดตพื้นที่เนื้อหา
+        content_area.content = ft.Column(
+            [
+                create_topbar(page, topbar_title),
+                view_content,
+            ],
+            spacing=0,
+        )
+
+        # ✅ อัปเดต Sidebar ให้ Active ตรงหน้า
+        sidebar_container.content = create_sidebar(page, active_page=view_name, update_view=update_view)
+
         page.update()
 
-    # ---------- สร้าง Sidebar ----------
+    # ---------- Sidebar ----------
     sidebar_container = ft.Container(
-        content=create_sidebar(page, "dashboard", update_view),
-        width=280,
+        content=create_sidebar(page, active_page="dashboard", update_view=update_view),
+        width=260,
         bgcolor=ft.Colors.WHITE,
         border=ft.Border.only(right=ft.BorderSide(1, ft.Colors.GREY_300)),
-        padding=20,
+        padding=ft.Padding.only(top=15, left=20, right=20, bottom=10),
+
     )
 
-    # ---------- พื้นที่เนื้อหาหลัก ----------
+    # ---------- พื้นที่เนื้อหา ----------
     content_area = ft.Container(
         content=ft.Column(
             [
@@ -101,3 +95,4 @@ def main(page: ft.Page):
 # ---------- เริ่มรัน ----------
 if __name__ == "__main__":
     ft.run(main, view=ft.AppView.WEB_BROWSER)
+

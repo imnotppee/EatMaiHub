@@ -1,71 +1,45 @@
-"""
-ไฟล์หน้า Edit Features สำหรับจัดการร้านอาหาร
-"""
 import flet as ft
 from utils.colors import AppColors
+import json, os
 
 
 def edit_features_view(page: ft.Page):
     """หน้า Edit Features"""
-    
-    # ข้อมูลร้านอาหารตัวอย่าง
-    restaurants = [
-        {
-            "name": "Urban street (สเต็กกามปรามเซียน)",
-            "detail": "สเต็กและอาหารโปรตุเกสชื่อสถานบาเทอราร์น",
-            "image": "assets/urban_street.jpg",
-        },
-        {
-            "name": "Sunbae Korean Restaurant",
-            "detail": "อาหารเกาหลี เกาใจ",
-            "image": "assets/sunbae.jpg",
-        },
-    ]
-    
-    def create_restaurant_card(restaurant):
-        """สร้าง Card ร้านอาหาร"""
+
+    # โหลดข้อมูลจาก JSON
+    json_path = os.path.join(os.path.dirname(__file__), "../data/features_data.json")
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    restaurants = data.get("restaurants", [])
+    random_foods = data.get("random_foods", [])
+    zodiac_foods = data.get("zodiac_foods", [])
+
+    # ---------- ฟังก์ชันสร้างการ์ดร้าน ----------
+    def create_card(item):
         return ft.Container(
             content=ft.Row(
-                controls=[
-                    # รูปภาพ
-                    ft.Container(
-                        content=ft.Image(
-                            src=restaurant["image"],
-                            width=200,
-                            height=150,
-                            fit=ft.ImageFit.COVER,
-                            border_radius=10,
-                        ),
+                [
+                    ft.Image(
+                        src=item["image"],
                         width=200,
                         height=150,
+                        fit="cover",
                         border_radius=10,
-                        bgcolor=ft.Colors.GREY_300,
                     ),
                     ft.Container(width=20),
-                    # ข้อมูล
                     ft.Column(
-                        controls=[
-                            ft.Text(
-                                restaurant["name"],
-                                size=16,
-                                weight=ft.FontWeight.BOLD,
-                                color=AppColors.SECONDARY,
-                            ),
-                            ft.Container(height=5),
-                            ft.Text(
-                                restaurant["detail"],
-                                size=13,
-                                color=AppColors.TEXT_SECONDARY,
-                            ),
+                        [
+                            ft.Text(item["name"], size=16, weight=ft.FontWeight.BOLD, color=AppColors.SECONDARY),
+                            ft.Text(item["detail"], size=13, color=AppColors.TEXT_SECONDARY),
                         ],
-                        spacing=0,
-                        expand=True,
+                        spacing=5,
                     ),
                 ],
             ),
-            padding=20,
             bgcolor=ft.Colors.WHITE,
             border_radius=12,
+            padding=20,
             border=ft.border.all(1, ft.Colors.GREY_300),
             shadow=ft.BoxShadow(
                 spread_radius=1,
@@ -74,94 +48,47 @@ def edit_features_view(page: ft.Page):
                 offset=ft.Offset(0, 2),
             ),
         )
-    
-    # Tabs
-    tabs = ft.Tabs(
-        selected_index=0,
-        animation_duration=300,
-        tabs=[
-            ft.Tab(
-                text="ร้านเด็ด",
-                icon=ft.Icons.STAR,
-            ),
-            ft.Tab(
-                text="สุ่มอาหาร",
-                icon=ft.Icons.SHUFFLE,
-            ),
-            ft.Tab(
-                text="กินตามดวง",
-                icon=ft.Icons.CASINO,
-            ),
-        ],
-        tab_alignment=ft.TabAlignment.START,
-    )
-    
-    # Action buttons
-    action_buttons = ft.Column(
+
+    # ---------- ส่วนของแท็บจำลอง ----------
+    current_tab = ft.Ref[ft.Column]()
+
+    def show_tab(tab_name):
+        if tab_name == "ร้านเด็ด":
+            current_tab.current.controls = [create_card(r) for r in restaurants]
+        elif tab_name == "สุ่มอาหาร":
+            current_tab.current.controls = [create_card(r) for r in random_foods]
+        elif tab_name == "กินตามดวง":
+            current_tab.current.controls = [create_card(r) for r in zodiac_foods]
+        page.update()
+
+    # ปุ่มจำลองแท็บ
+    tab_buttons = ft.Row(
         controls=[
-            ft.ElevatedButton(
-                "Add Features",
-                icon=ft.Icons.ADD,
-                bgcolor=AppColors.BG_LIGHT,
-                color=AppColors.TEXT_PRIMARY,
-                height=60,
-                style=ft.ButtonStyle(
-                    shape=ft.RoundedRectangleBorder(radius=10),
-                ),
-            ),
-            ft.ElevatedButton(
-                "Edit Detail",
-                icon=ft.Icons.EDIT,
-                bgcolor=AppColors.PRIMARY,
-                color=ft.Colors.WHITE,
-                height=60,
-                style=ft.ButtonStyle(
-                    shape=ft.RoundedRectangleBorder(radius=10),
-                ),
-            ),
-            ft.ElevatedButton(
-                "Delete Detail",
-                icon=ft.Icons.DELETE,
-                bgcolor=AppColors.BG_LIGHT,
-                color=AppColors.ERROR,
-                height=60,
-                style=ft.ButtonStyle(
-                    shape=ft.RoundedRectangleBorder(radius=10),
-                ),
-            ),
+            ft.ElevatedButton("ร้านเด็ด", on_click=lambda e: show_tab("ร้านเด็ด")),
+            ft.ElevatedButton("สุ่มอาหาร", on_click=lambda e: show_tab("สุ่มอาหาร")),
+            ft.ElevatedButton("กินตามดวง", on_click=lambda e: show_tab("กินตามดวง")),
         ],
         spacing=15,
     )
-    
-    # Layout หลัก
-    content = ft.Container(
-        content=ft.Row(
-            controls=[
-                # ส่วนซ้าย: รายการร้าน
-                ft.Container(
-                    content=ft.Column(
-                        controls=[
-                            tabs,
-                            ft.Container(height=20),
-                            ft.Column(
-                                controls=[
-                                    create_restaurant_card(restaurant)
-                                    for restaurant in restaurants
-                                ],
-                                spacing=15,
-                                scroll=ft.ScrollMode.AUTO,
-                            ),
-                        ],
-                    ),
-                    expand=True,
-                ),
-                ft.Container(width=30),
-                # ส่วนขวา: ปุ่มจัดการ
-                action_buttons,
-            ],
-        ),
-        padding=30,
+
+    # ---------- พื้นที่แสดงข้อมูล ----------
+    tab_content = ft.Column(ref=current_tab, spacing=10)
+    show_tab("ร้านเด็ด")  # ค่าเริ่มต้น
+
+    # ---------- Layout ----------
+    layout = ft.Container(
+    content=ft.Column(
+        [
+            ft.Text("Edit Features", size=22, weight=ft.FontWeight.BOLD),
+            ft.Container(tab_buttons, margin=ft.margin.only(bottom=15)),
+            tab_content,
+        ],
         expand=True,
-    )
-    
-    return content
+        scroll=ft.ScrollMode.AUTO,
+    ),
+    padding=20,  # ✅ ย้ายมาที่ Container แทน
+    expand=True,
+)
+
+
+    return layout
