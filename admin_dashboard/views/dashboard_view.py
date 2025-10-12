@@ -1,202 +1,104 @@
 import flet as ft
-import json
-import os
-from utils.colors import BRAND_ORANGE, BORDER_COLOR, BG_LIGHT
-from components.sidebar import Sidebar
-from components.topbar import Topbar
+import json, os
+from utils.colors import AppColors
+from components.card_stat import create_stat_card
 
 
-def build_dashboard_view(page: ft.Page):
-    # โหลดข้อมูล mock จากไฟล์ JSON
-    data_path = os.path.join(os.path.dirname(__file__), "../data/dashboard_data.json")
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+def load_dashboard_data():
+    """โหลดข้อมูล Dashboard จาก JSON"""
+    path = os.path.join(os.path.dirname(__file__), "..", "data", "dashboard_data.json")
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-    # ========== กราฟร้านยอดนิยม ==========
+
+def dashboard_view(page: ft.Page):
+    """หน้า Dashboard หลัก"""
+    data = load_dashboard_data()
+    shop_stats = data["shop_stats"]
+    monthly_usage = data["monthly_usage"]
+
+    # ---------- สร้างกราฟแท่ง (Top 5 ร้าน) ----------
+    max_value = max(s["value"] for s in shop_stats)
     bars = [
-        ft.BarChartGroup(
-            x=i,
-            bar_rods=[
-                ft.BarChartRod(
-                    from_y=0,
-                    to_y=restaurant["count"],
-                    color=BRAND_ORANGE,
-                    tooltip=restaurant["name"],
-                    width=25,
-                    border_radius=5,
-                )
+        ft.Column(
+            [
+                ft.Container(
+                    width=50,
+                    height=(s["value"] / max_value) * 180,
+                    bgcolor=AppColors.PRIMARY,
+                    border_radius=8,
+                ),
+                ft.Text(
+                    s["name"],
+                    size=12,
+                    text_align=ft.TextAlign.CENTER,
+                    color=AppColors.TEXT_SECONDARY,
+                ),
             ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
-        for i, restaurant in enumerate(data["popular_restaurants"])
+        for s in shop_stats
     ]
 
-    chart_popular = ft.BarChart(
-        bar_groups=bars,
-        border=ft.border.all(1, BORDER_COLOR),
-        left_axis=ft.ChartAxis(
-            labels=[
-                ft.ChartAxisLabel(value=v, label=ft.Text(str(v)))
-                for v in range(0, 301, 50)
+    bar_chart = ft.Container(
+        content=ft.Column(
+            [
+                ft.Text(data["notes"]["bar_chart_title"], size=20, weight=ft.FontWeight.BOLD),
+                ft.Container(height=10),
+                ft.Row(bars, alignment=ft.MainAxisAlignment.SPACE_AROUND),
             ]
         ),
-        bottom_axis=ft.ChartAxis(
-            labels=[
-                ft.ChartAxisLabel(
-                    value=i,
-                    label=ft.Text(r["name"], size=11, rotate=30),
-                )
-                for i, r in enumerate(data["popular_restaurants"])
-            ]
-        ),
-        horizontal_grid_lines=ft.ChartGridLines(color="#EEEEEE", width=1),
-        vertical_grid_lines=ft.ChartGridLines(color="#F8F8F8", width=1),
-        interactive=True,
-        animate=1000,
+        padding=30,
+        bgcolor=AppColors.BG_LIGHT,
+        border_radius=15,
         expand=True,
-        height=260,
     )
 
-    # ========== กราฟจำนวนการใช้งานต่อเดือน ==========
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July"]
-
-    usage_points = [
-        ft.LineChartDataPoint(
-            x=i,
-            y=v,
-            tooltip=f"{months[i]}: {v} ครั้ง"   # ✅ tooltip ต่อจุด
-        )
-        for i, v in enumerate(data["monthly_usage"])
-    ]
-
-    line_chart = ft.LineChart(
-        data_series=[
-            ft.LineChartData(
-                data_points=usage_points,
-                color=BRAND_ORANGE,
-                stroke_width=3,
-                curved=True,
-                stroke_cap_round=True
-            )
-        ],
-        bottom_axis=ft.ChartAxis(
-            labels=[
-                ft.ChartAxisLabel(value=i, label=ft.Text(month))
-                for i, month in enumerate(months)
+    # ---------- สร้างกราฟเส้นจำลอง (จำนวนการเข้าใช้งานต่อเดือน) ----------
+    line_chart = ft.Container(
+        content=ft.Column(
+            [
+                ft.Text(data["notes"]["line_chart_title"], size=20, weight=ft.FontWeight.BOLD),
+                ft.Container(height=10),
+                ft.Row(
+                    [ft.Text(m["month"], size=13, color="#666") for m in monthly_usage],
+                    alignment=ft.MainAxisAlignment.SPACE_AROUND,
+                ),
+                ft.ProgressBar(value=None, width=400, height=10, color=AppColors.PRIMARY),
+                ft.Container(height=10),
+                ft.Text(data["notes"]["line_chart_note"], size=12, color="#999"),
             ]
         ),
-        left_axis=ft.ChartAxis(
-            labels=[
-                ft.ChartAxisLabel(value=v, label=ft.Text(str(v)))
-                for v in range(0, 401, 100)
-            ]
-        ),
-        border=ft.border.all(1, BORDER_COLOR),
-        horizontal_grid_lines=ft.ChartGridLines(color="#EEEEEE", width=1),
-        interactive=True,
-        animate=1000,
-        height=260,
+        padding=30,
+        bgcolor=AppColors.BG_LIGHT,
+        border_radius=15,
+        expand=True,
     )
 
-
-    # ========== การ์ดสรุปข้อมูล ==========
-    summary_row = ft.Row(
+    # ---------- สถิติด้านบน (Stat Cards) ----------
+    stats_row = ft.Row(
         [
-            ft.Container(
-                content=ft.Column(
-                    [
-                        ft.Text("จำนวนผู้ใช้ทั้งหมด (Users)", size=16),
-                        ft.Text(
-                            f"{data['users']} User",
-                            size=22,
-                            weight=ft.FontWeight.BOLD,
-                            color=BRAND_ORANGE,
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                ),
-                border=ft.border.all(1, BORDER_COLOR),
-                border_radius=10,
-                bgcolor=BG_LIGHT,
-                expand=True,
-                padding=20,
-            ),
-            ft.Container(
-                content=ft.Column(
-                    [
-                        ft.Text("จำนวนร้านอาหารทั้งหมดในระบบ", size=16),
-                        ft.Text(
-                            f"{data['restaurants']} ร้านอาหารในระบบ",
-                            size=22,
-                            weight=ft.FontWeight.BOLD,
-                            color=BRAND_ORANGE,
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                ),
-                border=ft.border.all(1, BORDER_COLOR),
-                border_radius=10,
-                bgcolor=BG_LIGHT,
-                expand=True,
-                padding=20,
-            ),
+            create_stat_card(s["title"], s["value"], getattr(ft.Icons, s["icon"]))
+            for s in data["stats"]
         ],
-        spacing=15,
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        spacing=20,
     )
 
-     # ========== Layout หลัก ==========
-    return ft.View(
-        "/",
-        controls=[
-            ft.Row(
-                [
-                    Sidebar(page),
-                    ft.Container(  # ✅ ใช้ Container ครอบ Column แล้วใส่ padding ที่นี่แทน
-                        content=ft.Column(
-                            [
-                                Topbar(),
-                                ft.Row(
-                                    [
-                                        ft.Container(
-                                            ft.Column(
-                                                [
-                                                    ft.Text(
-                                                        "ร้านที่ถูกค้นหามากที่สุด",
-                                                        size=18,
-                                                        weight=ft.FontWeight.BOLD,
-                                                    ),
-                                                    chart_popular,
-                                                ]
-                                            ),
-                                            expand=2,
-                                        ),
-                                        ft.Container(
-                                            ft.Column(
-                                                [
-                                                    ft.Text(
-                                                        "จำนวนการเข้าใช้งานต่อเดือน",
-                                                        size=18,
-                                                        weight=ft.FontWeight.BOLD,
-                                                    ),
-                                                    line_chart,
-                                                ]
-                                            ),
-                                            expand=1,
-                                        ),
-                                    ],
-                                    spacing=15,
-                                ),
-                                summary_row,
-                            ],
-                            expand=True,
-                            spacing=15,
-                        ),
-                        expand=True,
-                        padding=20,  # ✅ padding ถูกต้องแล้ว
-                    )
-                ],
-                expand=True,
-            )
-        ],
+    # ---------- รวม Layout ทั้งหมด ----------
+    return ft.Container(
+        content=ft.Column(
+            [
+                stats_row,
+                ft.Container(height=25),
+                ft.Row(
+                    [bar_chart, line_chart],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+            ],
+            spacing=30,
+            scroll=ft.ScrollMode.AUTO,
+        ),
+        padding=40,
+        expand=True,
     )

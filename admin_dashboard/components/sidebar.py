@@ -1,47 +1,70 @@
 import flet as ft
-from utils.colors import BRAND_ORANGE
+from utils.colors import AppColors
 
 
-class Sidebar(ft.UserControl):
-    def __init__(self, page: ft.Page):
-        super().__init__()
-        self.page = page
-        self.active_route = "/"  # ✅ route เริ่มต้น (หน้า Dashboard)
+def create_sidebar(page: ft.Page, active_page="Dashboard", update_view=None):
+    """
+    สร้าง Sidebar พร้อมเมนูนำทาง
+    Args:
+        page: ft.Page
+        active_page: หน้าที่กำลังอยู่
+        update_view: callback function (ใช้เปลี่ยนหน้า)
+    """
 
-    def navigate(self, e, route):
-        self.active_route = route
-        self.page.go(route)
-        self.update()
+    def nav_item(name, icon, route_name):
+        """สร้างแต่ละปุ่มใน Sidebar"""
+        is_active = name.lower() == active_page.lower()
+        color = AppColors.PRIMARY if is_active else "#666666"
+        bgcolor = "#FFF6EB" if is_active else None
 
-    def build_button(self, text, route, icon=None):
-        is_active = self.active_route == route
         return ft.Container(
-            content=ft.Text(text, size=16, weight=ft.FontWeight.BOLD, color="#000000" if not is_active else "white"),
-            alignment=ft.alignment.center,
-            border=ft.border.all(1, "#E0E0E0"),
-            border_radius=10,
-            bgcolor=BRAND_ORANGE if is_active else "#F5F5F5",
-            height=50,
-            ink=True,
-            on_click=lambda e: self.navigate(e, route),
-            animate=ft.animation.Animation(250, ft.AnimationCurve.EASE_IN_OUT),
-        )
-
-    def build(self):
-        return ft.Container(
-            width=200,
-            bgcolor="#FAFAFA",
-            padding=15,
-            content=ft.Column(
+            content=ft.Row(
                 [
-                    ft.Image(src="/logo.png", width=80, height=80),
-                    ft.Divider(height=20, color="#EEEEEE"),
-                    self.build_button("Dashboard", "/"),
-                    self.build_button("Manage User", "/manage-user"),
-                    self.build_button("Edit Features", "/edit-features"),
-                    self.build_button("Admin", "/admin"),
+                    ft.Icon(icon, size=20, color=color),
+                    ft.Text(name, size=15, color=color, weight=ft.FontWeight.W_500),
                 ],
                 spacing=10,
                 alignment=ft.MainAxisAlignment.START,
             ),
+            padding=ft.padding.symmetric(vertical=10, horizontal=20),
+            bgcolor=bgcolor,
+            border_radius=8,
+            on_click=lambda _: update_view(route_name) if update_view else None,
         )
+
+    # Logo + Title
+    header = ft.Column(
+        [
+            ft.Image(src="logo.png", width=70, height=70),
+            ft.Text("eat mai hub", size=20, color=AppColors.PRIMARY, weight=ft.FontWeight.BOLD),
+            ft.Container(height=30),
+        ],
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+    )
+
+    # Navigation menu
+    menu_items = ft.Column(
+        [
+            nav_item("Dashboard", ft.Icons.DASHBOARD, "dashboard"),
+            nav_item("Manage User", ft.Icons.PEOPLE, "manage_user"),
+            nav_item("Edit Features", ft.Icons.SETTINGS, "features"),
+            nav_item("Admin", ft.Icons.ADMIN_PANEL_SETTINGS, "admin"),
+        ],
+        spacing=10,
+    )
+
+    return ft.Container(
+        width=250,
+        bgcolor="#FFFFFF",
+        padding=20,
+        content=ft.Column(
+            [
+                header,
+                menu_items,
+                ft.Container(expand=True),  # Spacer ด้านล่าง
+                ft.Text("© EatMaiHub Admin", size=11, color="#AAAAAA", text_align=ft.TextAlign.CENTER),
+            ],
+            spacing=10,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        ),
+    )

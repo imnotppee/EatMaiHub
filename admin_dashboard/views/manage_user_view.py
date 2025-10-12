@@ -1,78 +1,150 @@
+"""
+ไฟล์หน้า Manage User สำหรับจัดการผู้ใช้
+"""
 import flet as ft
-from components.sidebar import Sidebar
-from components.topbar import Topbar
-from utils.colors import BRAND_ORANGE, BORDER_COLOR, BG_LIGHT
+from utils.colors import AppColors
+from components.card_stat import create_stat_card
 
 
-def build_manage_user_view(page):
-    table = ft.DataTable(
-        border=ft.border.all(1, BORDER_COLOR),
-        border_radius=8,
-        horizontal_lines=ft.BorderSide(1, "#EEEEEE"),
-        vertical_lines=ft.BorderSide(1, "#F2F2F2"),
-        columns=[
-            ft.DataColumn(ft.Text("User ID")),
-            ft.DataColumn(ft.Text("Name")),
-            ft.DataColumn(ft.Text("Email")),
-            ft.DataColumn(ft.Text("Status")),
-        ],
-        rows=[
-            ft.DataRow(cells=[
-                ft.DataCell(ft.Text("U001")),
-                ft.DataCell(ft.Text("Tanawat")),
-                ft.DataCell(ft.Text("tanawat@example.com")),
-                ft.DataCell(ft.Container(
-                    ft.Text("Active", color="#1B5E20"),
-                    bgcolor="#E8F5E9",
-                    border_radius=10,
-                    padding=5,
-                    alignment=ft.alignment.center
-                ))
-            ]),
-            ft.DataRow(cells=[
-                ft.DataCell(ft.Text("U002")),
-                ft.DataCell(ft.Text("Pimchanok")),
-                ft.DataCell(ft.Text("pimchanok@example.com")),
-                ft.DataCell(ft.Container(
-                    ft.Text("Suspended", color="#C62828"),
-                    bgcolor="#FFEBEE",
-                    border_radius=10,
-                    padding=5,
-                    alignment=ft.alignment.center
-                ))
-            ]),
-        ],
-    )
-
+def manage_user_view(page: ft.Page):
+    """หน้า Manage User"""
+    
+    # ข้อมูลผู้ใช้ตัวอย่าง
+    users = [
+        {"id": "U-001", "name": "woonsen", "email": "woonsen123@gmail.com"},
+        {"id": "U-002", "name": "kittikarn", "email": "kittikarn456@gmail.com"},
+        {"id": "U-003", "name": "tonoak", "email": "tonoak789@gmail.com"},
+    ]
+    
+    def create_user_table():
+        """สร้างตารางผู้ใช้"""
+        
+        # Header
+        header = ft.Row(
+            controls=[
+                ft.Container(
+                    content=ft.Text(
+                        "User ID",
+                        size=14,
+                        weight=ft.FontWeight.BOLD,
+                        color=AppColors.TEXT_PRIMARY,
+                    ),
+                    width=150,
+                ),
+                ft.Container(
+                    content=ft.Text(
+                        "Name",
+                        size=14,
+                        weight=ft.FontWeight.BOLD,
+                        color=AppColors.TEXT_PRIMARY,
+                    ),
+                    width=200,
+                ),
+                ft.Container(
+                    content=ft.Text(
+                        "Gmail",
+                        size=14,
+                        weight=ft.FontWeight.BOLD,
+                        color=AppColors.TEXT_PRIMARY,
+                    ),
+                    expand=True,
+                ),
+            ],
+            spacing=20,
+        )
+        
+        # Rows
+        user_rows = []
+        for user in users:
+            row = ft.Container(
+                content=ft.Row(
+                    controls=[
+                        ft.Container(
+                            content=ft.Text(
+                                user["id"],
+                                size=13,
+                                color=AppColors.TEXT_SECONDARY,
+                            ),
+                            width=150,
+                        ),
+                        ft.Container(
+                            content=ft.Text(
+                                user["name"],
+                                size=13,
+                                color=AppColors.TEXT_SECONDARY,
+                            ),
+                            width=200,
+                        ),
+                        ft.Container(
+                            content=ft.Text(
+                                user["email"],
+                                size=13,
+                                color=AppColors.TEXT_SECONDARY,
+                            ),
+                            expand=True,
+                        ),
+                    ],
+                    spacing=20,
+                ),
+                padding=15,
+                bgcolor=ft.Colors.WHITE,
+                border_radius=8,
+                border=ft.border.all(1, ft.Colors.GREY_300),
+            )
+            user_rows.append(row)
+        
+        return ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Text(
+                        "ภาพรวมบัญชีผู้ใช้",
+                        size=18,
+                        weight=ft.FontWeight.BOLD,
+                        color=AppColors.TEXT_PRIMARY,
+                    ),
+                    ft.Container(height=20),
+                    header,
+                    ft.Divider(height=1, color=ft.Colors.GREY_400),
+                    ft.Container(height=10),
+                    ft.Column(
+                        controls=user_rows,
+                        spacing=10,
+                    ),
+                ],
+            ),
+            padding=25,
+            bgcolor=AppColors.BG_LIGHT,
+            border_radius=15,
+            width=800,
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=10,
+                color=ft.Colors.with_opacity(0.1, ft.Colors.BLACK),
+                offset=ft.Offset(0, 2),
+            ),
+        )
+    
+    # Layout หลัก
     content = ft.Container(
         content=ft.Column(
-            [
-                Topbar(),
-                ft.Text("📋 จัดการผู้ใช้ (Manage Users)", size=24, weight=ft.FontWeight.BOLD),
-                ft.Divider(height=20, color="#F0F0F0"),
-                ft.Container(
-                    table,
-                    expand=True,
-                    border=ft.border.all(1, BORDER_COLOR),
-                    border_radius=10,
-                    padding=15,
-                    bgcolor="#FFFFFF",
-                    shadow=ft.BoxShadow(blur_radius=4, color="#E0E0E0"),
-                )
+            controls=[
+                # สถิติ
+                ft.Row(
+                    controls=[
+                        create_stat_card("ผู้ใช้ทั้งหมด", "15", ft.Icons.PEOPLE, width=350),
+                        create_stat_card("จำนวนผู้ใช้ใหม่", "4", ft.Icons.PERSON_ADD, width=350),
+                    ],
+                    alignment=ft.MainAxisAlignment.START,
+                    spacing=25,
+                ),
+                ft.Container(height=30),
+                # ตารางผู้ใช้
+                create_user_table(),
             ],
-            spacing=15,
+            scroll=ft.ScrollMode.AUTO,
         ),
+        padding=30,
         expand=True,
-        padding=25,
-        bgcolor="#FAFAFA"
     )
-
-    return ft.View(
-        "/manage-user",
-        controls=[
-            ft.Row([
-                Sidebar(page),
-                content
-            ])
-        ]
-    )
+    
+    return content
