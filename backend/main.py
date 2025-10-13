@@ -9,7 +9,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="EatMaiHub Backend API", version="1.0")
 
 # ✅ รวมทุก router
-app.include_router(auth_router.router)
+app.include_router(auth_component.router)
 
 # ✅ root endpoint
 @app.get("/")
