@@ -2,6 +2,7 @@ import flet as ft
 import json
 import os
 import datetime
+from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
@@ -37,7 +38,7 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
         gradient=ft.LinearGradient(
             begin=ft.alignment.top_center,
             end=ft.alignment.bottom_center,
-            colors=["#E67E22", "#FAD7A0"]
+            colors=[BRAND_ORANGE, "#F6D0A0"]
         ),
         padding=ft.padding.only(left=16, right=16, top=30, bottom=16),
         content=ft.Column(
@@ -115,20 +116,59 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
 
     food_list = [food_card(f) for f in today_foods]
 
-    # ---------- เนื้อหาหลัก ----------
-    body = ft.Container(
-        width=PHONE_W,
-        height=PHONE_H,
-        bgcolor=ft.Colors.WHITE,
+    # ---------- Scrollable Content ----------
+    scrollable_area = ft.Container(
+        expand=True,
         content=ft.Column(
             scroll=ft.ScrollMode.ALWAYS,
             controls=[
                 header,
                 ft.Container(padding=ft.padding.all(16), content=title_row),
-                ft.Container(padding=ft.padding.symmetric(horizontal=16), content=ft.Column(spacing=12, controls=food_list)),
-                ft.Container(height=40),
+                ft.Container(
+                    padding=ft.padding.symmetric(horizontal=16),
+                    content=ft.Column(spacing=12, controls=food_list),
+                ),
             ],
         ),
+    )
+
+    # ---------- Bottom Navigation ----------
+    def nav_item(icon: str, label: str, route=None, active=False):
+        return ft.GestureDetector(
+            on_tap=lambda e: page.go(route) if route else None,
+            content=ft.Column(
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=2,
+                controls=[
+                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
+                ],
+            ),
+        )
+
+    bottom_nav = ft.Container(
+        bgcolor=Colors.WHITE,
+        border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
+        padding=10,
+        height=65,
+        content=ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_AROUND,
+            controls=[
+                nav_item("home.png", "Home", route="/home"),
+                nav_item("heart.png", "Favorite", route="/favorite"),
+                nav_item("review.png", "Review"),
+                nav_item("more.png", "More"),
+            ],
+        ),
+    )
+    # ---------- Layout รวม ----------
+    layout = ft.Column(
+        expand=True,
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        controls=[
+            ft.Container(expand=True, content=scrollable_area),
+            bottom_nav,
+        ],
     )
 
     return ft.View(
@@ -137,13 +177,13 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
         controls=[
             ft.Container(
                 expand=True,
-                bgcolor=ft.Colors.BLACK,
+                bgcolor=Colors.BLACK,
                 alignment=ft.alignment.center,
                 content=ft.Container(
                     width=PHONE_W,
                     height=PHONE_H,
-                    bgcolor=ft.Colors.WHITE,
-                    content=body,
+                    bgcolor=Colors.WHITE,
+                    content=layout,
                 ),
             )
         ],
