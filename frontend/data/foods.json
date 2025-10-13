@@ -1,0 +1,38 @@
+[
+    {
+      "title": "เกิดวันจันทร์",
+      "subtitle": "กินข้าวมันไก่",
+      "image": "food1.png"
+    },
+    {
+      "title": "เกิดวันอังคาร",
+      "subtitle": "กินกะเพราหมูสับ",
+      "image": "food2.png"
+    },
+    {
+      "title": "เกิดวันพุธ",
+      "subtitle": "กินไก่ทอดซอเขียวหวาน",
+      "image": "food3.jpg"
+    },
+    {
+      "title": "เกิดวันพฤหัสบดี",
+      "subtitle": "กินส้มตำไก่ย่าง",
+      "image": "food4.jpg"
+    },
+    {
+      "title": "เกิดวันศุกร์",
+      "subtitle": "กินข้าวผัดกุ้ง",
+      "image": "food5.webp"
+    },
+    {
+      "title": "เกิดวันเสาร์",
+      "subtitle": "กินราเมงหมูชาชู",
+      "image": "food6.jpg"
+    },
+    {
+      "title": "เกิดวันอาทิตย์",
+      "subtitle": "กินสเต๊กเนื้อ",
+      "image": "food7.jpg"
+    }
+  ]
+  

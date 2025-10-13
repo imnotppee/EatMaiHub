@@ -1,0 +1,22 @@
+{
+  "fast_foods": [
+    {
+      "name": "Urban Street",
+      "rating": "4.0",
+      "address": "ซอยเกกีงาม 4 ลาดกระบัง",
+      "image": "fast1.png"
+    },
+    {
+      "name": "หมาล่าไทม์",
+      "rating": "4.8",
+      "address": "ตลาดจิต-วะรากร",
+      "image": "fast2.png"
+    },
+    {
+      "name": "ไก่ทอดไอโซ",
+      "rating": "4.9",
+      "address": "ฉลองกรุง 1",
+      "image": "fast3.png"
+    }
+  ]
+}
