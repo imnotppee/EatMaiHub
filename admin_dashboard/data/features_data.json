@@ -1,0 +1,50 @@
+{
+  "restaurants": [
+    {
+      "name": "Urban Street (สเต็กกาภปรามเซียน)",
+      "detail": "สเต็กและอาหารโปรตุเกสชื่อดังจากบางนาเทอร์เรส",
+      "image": "assets/urban_street.jpg",
+      "store_name": "",
+      "store_detail": "",
+      "menus": [
+        {
+          "name": "ชื่อเมนูใหม่",
+          "image": "assets/sample.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Sunbae Korean Restaurant",
+      "detail": "อาหารเกาหลีแท้ รสชาติเกาใจ",
+      "image": "assets/sunbae.jpg"
+    },
+    {
+      "name": "ชื่อใหม่",
+      "detail": "รายละเอียดใหม่",
+      "image": "assets/sample.jpg"
+    }
+  ],
+  "random_foods": [
+    {
+      "name": "ผัดไทยกุ้งสด",
+      "detail": "เมนูไทยรสจัดจ้านที่ถูกใจทุกคน",
+      "image": "assets/padthai.jpg"
+    }
+  ],
+  "zodiac_foods": [
+    {
+      "name": "ชื่อใหม่",
+      "detail": "รายละเอียดใหม่",
+      "image": "assets/sample.jpg"
+    }
+  ],
+  "nearby_shops": [
+    {
+      "name": "ชื่อใหม่",
+      "detail": "รายละเอียดใหม่",
+      "image": "assets/sample.jpg"
+    }
+  ],
+  "categories": [],
+  "color_day": []
+}
