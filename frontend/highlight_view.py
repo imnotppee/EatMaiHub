@@ -1,6 +1,7 @@
 import flet as ft
 import json
 import os
+from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
@@ -26,7 +27,7 @@ def build_highlight_view(page: ft.Page) -> ft.View:
                 style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=20)),
             ),
             ft.Image(src="logo.png", width=150, height=90),
-            ft.Container(width=36),  # ช่องว่างแทนปุ่มขวา
+            ft.Container(width=36),
         ],
     )
 
@@ -65,7 +66,7 @@ def build_highlight_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- การ์ดแต่ละร้าน ----------
+    # ---------- ฟังก์ชันสร้างการ์ดร้าน ----------
     def restaurant_card(img, name, desc, route=None):
         """สร้างการ์ดร้านพร้อมคลิกได้"""
         return ft.GestureDetector(
@@ -92,28 +93,28 @@ def build_highlight_view(page: ft.Page) -> ft.View:
             ),
         )
 
-# ---------- สร้างรายการร้านทั้งหมด ----------
-    restaurant_list = ft.Column(
-        spacing=12,
-        controls=[
-            restaurant_card(
-                r["image"],
-                r["name"],
-                r["desc"],
-                route="/urban" if r["name"] == "Urban Street" 
-                else "/sunbae" if r["name"] == "Sunbae Korean Restaurant" 
-                else None
-            )
-            for r in restaurants
-        ],
-    )
+    # ---------- สร้างรายการร้านทั้งหมด ----------
+    restaurant_list = ft.Column(spacing=12, controls=[])
 
+    for r in restaurants:
+        name_lower = r["name"].lower()
 
-    # ---------- เนื้อหาหลัก ----------
-    body = ft.Container(
-        width=PHONE_W,
-        height=PHONE_H,
-        bgcolor=ft.Colors.WHITE,
+        if "urban" in name_lower:
+            route = "/urban"
+        elif "sunbae" in name_lower:
+            route = "/sunbae"
+        elif "hotto bun" in name_lower:
+            route = "/hottobun"
+        else:
+            route = None
+
+        restaurant_list.controls.append(
+            restaurant_card(r["image"], r["name"], r["desc"], route)
+        )
+
+    # ---------- เนื้อหาหลัก (scroll ได้) ----------
+    scrollable_content = ft.Container(
+        expand=True,
         content=ft.Column(
             scroll=ft.ScrollMode.ALWAYS,
             controls=[
@@ -129,12 +130,44 @@ def build_highlight_view(page: ft.Page) -> ft.View:
         ),
     )
 
-    # ---------- Frame ----------
-    phone_frame = ft.Container(
-        width=PHONE_W,
-        height=PHONE_H,
-        bgcolor=ft.Colors.WHITE,
-        content=body,
+    # ---------- Bottom Navigation ----------
+    def nav_item(icon: str, label: str, route=None, active=False):
+        return ft.GestureDetector(
+            on_tap=lambda e: page.go(route) if route else None,
+            content=ft.Column(
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=2,
+                controls=[
+                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
+                ],
+            ),
+        )
+
+    bottom_nav = ft.Container(
+        bgcolor=Colors.WHITE,
+        border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
+        padding=10,
+        height=65,
+        content=ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_AROUND,
+            controls=[
+                nav_item("home.png", "Home", route="/home"),
+                nav_item("heart.png", "Favorite", route="/favorite"),
+                nav_item("review.png", "Review"),
+                nav_item("more.png", "More"),
+            ],
+        ),
+    )
+
+    # ---------- Layout รวม ----------
+    layout = ft.Column(
+        expand=True,
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        controls=[
+            scrollable_content,
+            bottom_nav,
+        ],
     )
 
     return ft.View(
@@ -145,7 +178,12 @@ def build_highlight_view(page: ft.Page) -> ft.View:
                 expand=True,
                 bgcolor=ft.Colors.BLACK,
                 alignment=ft.alignment.center,
-                content=phone_frame,
+                content=ft.Container(
+                    width=PHONE_W,
+                    height=PHONE_H,
+                    bgcolor=ft.Colors.WHITE,
+                    content=layout,
+                ),
             )
         ],
     )

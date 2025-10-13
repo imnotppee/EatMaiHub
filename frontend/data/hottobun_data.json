@@ -1,0 +1,27 @@
+{
+    "name": "Hotto Bun ホットバン",
+    "review": "ร้านญี่ปุ่นแฮนเมดพร้อมคาเฟ่สุดอบอุ่น",
+    "address": "KL Villa ซอยฉลองกรุง 1 แขวงลาดกระบัง ",
+    "banner": [
+      "banner3.png"
+    ],
+    "menus": [
+      {
+        "name": "เบอร์เกอร์หมูเทอริยากิ",
+        "image": "menu_bun1.webp"
+      },
+      {
+        "name": "สลัดไก่กรอบ",
+        "image": "menu_bun2.webp"
+      },
+      {
+        "name": "ดังโงะ",
+        "image": "menu_bun3.webp"
+      },
+      {
+        "name": "เค้กทำเอง",
+        "image": "menu_bun4.webp"
+      }
+    ]
+  }
+  
