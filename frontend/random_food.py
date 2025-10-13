@@ -2,7 +2,6 @@ import flet as ft
 import json, os, random, time
 from flet import Colors
 
-
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
@@ -27,89 +26,16 @@ def build_spin_view(page: ft.Page):
         ],
     )
 
-    search = ft.TextField(
-        hint_text="ค้นหาร้าน / เมนู",
-        prefix_icon=ft.Icons.SEARCH,
-        border_radius=20,
-        border_color=BRAND_ORANGE,
-        filled=True,
-        fill_color=ft.Colors.WHITE,
-        height=44,
-    )
-
     header = ft.Container(
         padding=ft.padding.only(left=16, right=16, top=12, bottom=10),
-        content=ft.Column(spacing=12, controls=[header_row, search]),
-    )
-
-    # ---------- ปุ่มหมวด ----------
-    def pill(icon_src: str, label: str, route=None, active=False):
-        return ft.GestureDetector(
-            on_tap=lambda e: page.go(route) if route else None,
-            content=ft.Container(
-                bgcolor=ft.Colors.WHITE,
-                border_radius=12,
-                padding=12,
-                width=(PHONE_W - 64) / 2,
-                shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.BLACK12),
-                content=ft.Column(
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[
-                        ft.Image(src=icon_src, width=40, height=40),
-                        ft.Text(
-                            label,
-                            size=14,
-                            weight="bold" if active else "normal",
-                            color=BRAND_ORANGE if active else ft.Colors.BLACK87,
-                        ),
-                    ],
-                ),
-            ),
-        )
-
-    top_buttons = ft.Row(
-        alignment=ft.MainAxisAlignment.SPACE_AROUND,
-        controls=[
-            pill("star.png", "ร้านเด็ด", route="/highlight"),
-            pill("roll.png", "สุ่มอาหาร", active=True),
-        ],
-    )
-
-    # ---------- ปุ่มฟีเจอร์ ----------
-    def feature(icon_src: str, label: str, on_click=None):
-        return ft.GestureDetector(
-            on_tap=on_click or (lambda e: None),
-            content=ft.Container(
-                bgcolor=ft.Colors.WHITE,
-                border_radius=12,
-                padding=10,
-                width=(PHONE_W - 64) / 4,
-                shadow=ft.BoxShadow(blur_radius=6, color=ft.Colors.BLACK12),
-                content=ft.Column(
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[
-                        ft.Image(src=icon_src, width=32, height=32),
-                        ft.Text(label, size=12),
-                    ],
-                ),
-            ),
-        )
-
-    feature_row = ft.Row(
-        alignment=ft.MainAxisAlignment.SPACE_AROUND,
-        controls=[
-            feature("ball.png", "กินตามดวง"),
-            feature("pin.png", "ร้านใกล้ฉัน"),
-            feature("category.png", "หมวดหมู่", on_click=lambda e: page.go("/categories")),
-            feature("palette.png", "กินตามสีวัน"),
-        ],
+        content=header_row,
     )
 
     # ---------- กล่องแสดงสุ่ม ----------
     random_image = ft.Image(
         src="photo/qqq.jpg",
-        width=220,
-        height=220,
+        width=240,
+        height=240,
         border_radius=20,
         fit=ft.ImageFit.COVER,
     )
@@ -123,13 +49,13 @@ def build_spin_view(page: ft.Page):
     )
 
     random_box = ft.Container(
-        width=300,
-        height=320,
+        width=310,
+        height=350,
         border_radius=20,
         bgcolor=ft.Colors.WHITE,
-        shadow=ft.BoxShadow(blur_radius=15, color=ft.Colors.BLACK26),
+        shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.BLACK26),
         alignment=ft.alignment.center,
-        padding=15,
+        padding=20,
         content=ft.Column(
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -146,7 +72,6 @@ def build_spin_view(page: ft.Page):
     def on_spin(e):
         total_rounds = 10
 
-        # หมุนเร็ว 5 ครั้งแรก
         for i in range(5):
             temp = random.choice(foods)
             random_image.src = f"photo/{temp['image']}"
@@ -154,7 +79,6 @@ def build_spin_view(page: ft.Page):
             page.update()
             time.sleep(0.3)
 
-        # หมุนช้าลง 5 ครั้งหลัง
         for i in range(5, total_rounds):
             temp = random.choice(foods)
             random_image.src = f"photo/{temp['image']}"
@@ -162,13 +86,11 @@ def build_spin_view(page: ft.Page):
             page.update()
             time.sleep(0.3 + (i - 4) * 0.1)
 
-        # เมนูสุดท้ายจริง
         final_food = random.choice(foods)
         random_image.src = f"photo/{final_food['image']}"
         random_name.value = final_food["name"]
         page.update()
 
-        # ---------- popup ----------
         popup = ft.Container(
             bgcolor=ft.Colors.WHITE,
             border_radius=20,
@@ -199,18 +121,14 @@ def build_spin_view(page: ft.Page):
                                 text="สุ่มอีกครั้ง",
                                 bgcolor=BRAND_ORANGE,
                                 color=ft.Colors.WHITE,
-                                style=ft.ButtonStyle(
-                                    shape=ft.RoundedRectangleBorder(radius=16)
-                                ),
+                                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=16)),
                                 on_click=lambda e: [remove_popup(), on_spin(e)],
                             ),
                             ft.ElevatedButton(
                                 text="ตกลง",
                                 bgcolor="#888888",
                                 color=ft.Colors.WHITE,
-                                style=ft.ButtonStyle(
-                                    shape=ft.RoundedRectangleBorder(radius=16)
-                                ),
+                                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=16)),
                                 on_click=lambda e: remove_popup(),
                             ),
                         ],
@@ -226,21 +144,14 @@ def build_spin_view(page: ft.Page):
             content=popup,
         )
 
-        # ---------- ฟังก์ชันลบ popup ----------
         def remove_popup():
             if overlay in phone_frame.controls:
                 phone_frame.controls.remove(overlay)
                 page.update()
 
-        # เพิ่ม popup ลงไป (เช็กไม่ให้ซ้ำ)
         if overlay not in phone_frame.controls:
             phone_frame.controls.append(overlay)
         page.update()
-
-
-
-
-
 
     # ---------- ปุ่มสุ่ม ----------
     spin_button = ft.Container(
@@ -277,7 +188,7 @@ def build_spin_view(page: ft.Page):
         ),
     )
 
-        # ---------- Bottom nav ----------
+    # ---------- Bottom nav ----------
     def nav_item(icon: str, label: str, route=None, active=False):
         return ft.GestureDetector(
             on_tap=lambda e: page.go(route) if route else None,
@@ -289,11 +200,7 @@ def build_spin_view(page: ft.Page):
                         content=ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
                         padding=ft.padding.only(top=2, bottom=2),
                     ),
-                    ft.Text(
-                        label,
-                        size=10,
-                        color=BRAND_ORANGE if active else ft.Colors.BLACK87,
-                    ),
+                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
                 ],
             ),
         )
@@ -313,14 +220,14 @@ def build_spin_view(page: ft.Page):
         ),
     )
 
-
     # ---------- Layout รวม ----------
     body = ft.Column(
         expand=True,
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        spacing=25,
         controls=[
             header,
-            top_buttons,
-            feature_row,
             main_section,
             bottom_nav,
         ],
