@@ -1,18 +1,29 @@
 import flet as ft
-import json, os, random, time
+import random, time, requests
 from flet import Colors
 
-
+# ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
 
+# ---------- โหลดข้อมูลจาก Backend ----------
 def load_food_data():
-    path = os.path.join(os.path.dirname(__file__), "data", "random_food.json")
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)["foods"]
+    api_url = "http://127.0.0.1:5001/api/foods"  # URL ของ backend Flask
+    try:
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            print("✅ ดึงข้อมูลจาก backend สำเร็จ")
+            return response.json()
+        else:
+            print("⚠️ ดึงข้อมูลไม่สำเร็จ:", response.status_code)
+            return []
+    except Exception as e:
+        print("❌ เกิดข้อผิดพลาดในการดึงข้อมูล:", e)
+        return []
 
 
+# ---------- หน้าสุ่มอาหาร ----------
 def build_spin_view(page: ft.Page):
     foods = load_food_data()
 
@@ -21,7 +32,11 @@ def build_spin_view(page: ft.Page):
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
         controls=[
-            ft.IconButton(icon=ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda e: page.go("/home")),
+            ft.IconButton(
+                icon=ft.Icons.ARROW_BACK,
+                icon_color=ft.Colors.WHITE,
+                on_click=lambda e: page.go("/home"),
+            ),
             ft.Image(src="logo.png", width=36, height=36),
             ft.IconButton(icon=ft.Icons.PERSON, icon_color=ft.Colors.WHITE),
         ],
@@ -107,7 +122,8 @@ def build_spin_view(page: ft.Page):
 
     # ---------- กล่องแสดงสุ่ม ----------
     random_image = ft.Image(
-        src="photo/qqq.jpg",
+    src="photo/qqq.jpg",
+
         width=220,
         height=220,
         border_radius=20,
@@ -144,6 +160,11 @@ def build_spin_view(page: ft.Page):
 
     # ---------- ฟังก์ชันสุ่ม ----------
     def on_spin(e):
+        if not foods:
+            random_name.value = "⚠️ ไม่มีข้อมูลอาหารในระบบ"
+            page.update()
+            return
+
         total_rounds = 10
 
         # หมุนเร็ว 5 ครั้งแรก
@@ -152,7 +173,7 @@ def build_spin_view(page: ft.Page):
             random_image.src = f"photo/{temp['image']}"
             random_name.value = temp["name"]
             page.update()
-            time.sleep(0.3)
+            time.sleep(0.25)
 
         # หมุนช้าลง 5 ครั้งหลัง
         for i in range(5, total_rounds):
@@ -160,7 +181,7 @@ def build_spin_view(page: ft.Page):
             random_image.src = f"photo/{temp['image']}"
             random_name.value = temp["name"]
             page.update()
-            time.sleep(0.3 + (i - 4) * 0.1)
+            time.sleep(0.25 + (i - 4) * 0.1)
 
         # เมนูสุดท้ายจริง
         final_food = random.choice(foods)
@@ -237,11 +258,6 @@ def build_spin_view(page: ft.Page):
             phone_frame.controls.append(overlay)
         page.update()
 
-
-
-
-
-
     # ---------- ปุ่มสุ่ม ----------
     spin_button = ft.Container(
         width=180,
@@ -252,7 +268,9 @@ def build_spin_view(page: ft.Page):
             end=ft.alignment.center_right,
             colors=["#FF6B35", "#DC7A00", "#FF8C42"],
         ),
-        shadow=ft.BoxShadow(blur_radius=15, color=ft.Colors.with_opacity(0.4, BRAND_ORANGE)),
+        shadow=ft.BoxShadow(
+            blur_radius=15, color=ft.Colors.with_opacity(0.4, BRAND_ORANGE)
+        ),
         alignment=ft.alignment.center,
         content=ft.Row(
             alignment=ft.MainAxisAlignment.CENTER,
@@ -277,7 +295,7 @@ def build_spin_view(page: ft.Page):
         ),
     )
 
-        # ---------- Bottom nav ----------
+    # ---------- Bottom nav ----------
     def nav_item(icon: str, label: str, route=None, active=False):
         return ft.GestureDetector(
             on_tap=lambda e: page.go(route) if route else None,
@@ -286,7 +304,9 @@ def build_spin_view(page: ft.Page):
                 spacing=2,
                 controls=[
                     ft.Container(
-                        content=ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                        content=ft.Image(
+                            src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN
+                        ),
                         padding=ft.padding.only(top=2, bottom=2),
                     ),
                     ft.Text(
@@ -313,17 +333,10 @@ def build_spin_view(page: ft.Page):
         ),
     )
 
-
     # ---------- Layout รวม ----------
     body = ft.Column(
         expand=True,
-        controls=[
-            header,
-            top_buttons,
-            feature_row,
-            main_section,
-            bottom_nav,
-        ],
+        controls=[header, top_buttons, feature_row, main_section, bottom_nav],
     )
 
     # ---------- BG ----------

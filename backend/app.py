@@ -11,7 +11,35 @@ def get_conn():
         database="Eat_Mai_Hub",
         user="postgres",
         password="1234"
-    )
+    )from flask import Flask, jsonify
+from flask_cors import CORS
+import psycopg2
+
+app = Flask(__name__)
+CORS(app)
+
+# ✅ เชื่อมต่อฐานข้อมูล PostgreSQL
+conn = psycopg2.connect(
+    host="localhost",
+    database="Eat_Mai_Hub",
+    user="postgres",
+    password="1234"
+)
+cursor = conn.cursor()
+
+@app.route("/api/foods", methods=["GET"])
+def get_foods():
+    cursor.execute("SELECT id, name, image, type FROM foods;")
+    rows = cursor.fetchall()
+
+    foods = [
+        {"id": r[0], "name": r[1], "image": r[2], "type": r[3]} for r in rows
+    ]
+    return jsonify(foods)
+
+if __name__ == "__main__":
+    app.run(port=5001, debug=True)
+
 
 @app.route("/")
 def home():
