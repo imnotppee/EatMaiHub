@@ -116,7 +116,8 @@ def build_home_view(page: ft.Page) -> ft.View:
             feature("ball.png", "กินตามดวง", route="/horoscope"),
             feature("pin.png", "ร้านใกล้ฉัน", route="/nearby"),
             feature("category.png", "หมวดหมู่", on_click=lambda e: page.go("/categories")),
-            feature("palette.png", "กินตามสีวัน"),
+            feature("palette.png", "กินตามสีวัน", route="/color"),  
+
         ],
     )
 
