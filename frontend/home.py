@@ -270,21 +270,18 @@ def build_home_view(page: ft.Page) -> ft.View:
     )
 
     # ---------- Bottom nav ----------
-    def nav_item(icon: str, label: str, route=None, active=False, on_click=None):
+    def nav_item(icon: str, label: str, route=None, active=False):
         return ft.GestureDetector(
-        on_tap=on_click or (lambda e: page.go(route) if route else None),
-        content=ft.Column(
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=2,
-            controls=[
-                ft.Container(
-                    content=ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
-                    padding=ft.padding.only(top=2, bottom=2),
-                ),
-                ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
-            ],
-        ),
-    )
+            on_tap=lambda e: page.go(route) if route else None,
+            content=ft.Column(
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=2,
+                controls=[
+                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
+                ],
+            ),
+        )
 
 
     bottom_nav = ft.Container(
