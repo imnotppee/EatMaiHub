@@ -1,9 +1,12 @@
 import flet as ft
 from components.sidebar import create_sidebar
 from components.topbar import create_topbar
+
+# ✅ Views หลัก
 from views.dashboard_view import dashboard_view
 from views.manage_user_view import manage_user_view
 from views.edit_features_view import edit_features_view
+from views.edit_feature_detail_view import edit_feature_detail_view  # เพิ่มมาใหม่
 from views.admin_view import admin_view
 
 
@@ -35,6 +38,9 @@ def main(page: ft.Page):
         elif view_name == "edit_features":
             topbar_title = "Edit Features"
             view_content = edit_features_view(page)
+        elif view_name == "edit_feature_detail":  # ✅ หน้าแก้ไขข้อมูลใหม่
+            topbar_title = "Edit Feature Detail"
+            view_content = edit_feature_detail_view(page)
         elif view_name == "admin":
             topbar_title = "Admin"
             view_content = admin_view(page)
@@ -52,7 +58,9 @@ def main(page: ft.Page):
         )
 
         # ✅ อัปเดต Sidebar ให้ Active ตรงหน้า
-        sidebar_container.content = create_sidebar(page, active_page=view_name, update_view=update_view)
+        sidebar_container.content = create_sidebar(
+            page, active_page=view_name, update_view=update_view
+        )
 
         page.update()
 
@@ -63,7 +71,6 @@ def main(page: ft.Page):
         bgcolor=ft.Colors.WHITE,
         border=ft.Border.only(right=ft.BorderSide(1, ft.Colors.GREY_300)),
         padding=ft.Padding.only(top=15, left=20, right=20, bottom=10),
-
     )
 
     # ---------- พื้นที่เนื้อหา ----------
@@ -91,8 +98,17 @@ def main(page: ft.Page):
 
     page.add(layout)
 
+    # ---------- รองรับการเปลี่ยน route (จากหน้าแก้ไข) ----------
+    def route_change(route):
+        """จัดการการเปลี่ยนหน้าแบบ route"""
+        if page.route == "/edit_feature_detail":
+            update_view("edit_feature_detail")
+        else:
+            update_view("dashboard")
+
+    page.on_route_change = route_change
+
 
 # ---------- เริ่มรัน ----------
 if __name__ == "__main__":
     ft.run(main, view=ft.AppView.WEB_BROWSER)
-
