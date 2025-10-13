@@ -16,6 +16,8 @@ from horoscope_view import build_horoscope_view
 from random_food import build_spin_view
 from nearby_view import build_nearby_view
 from favorite_view import build_favorite_view
+from review_view import build_review_view
+
 
 
 
@@ -70,6 +72,8 @@ def main(page: ft.Page):
             page.views.append(build_horoscope_view(page))
         elif r == "/random":       # ✅ สุ่มอาหาร
             page.views.append(build_spin_view(page))
+        elif r == "/review":
+            page.views.append(build_review_view(page))
         elif r == "/nearby":
             page.views.append(build_nearby_view(page))
         elif r == "/favorite":

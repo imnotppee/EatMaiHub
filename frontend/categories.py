@@ -71,7 +71,8 @@ def categories_view(page: ft.Page) -> ft.View:
         cards = []
 
         for f in food_items:
-            is_fav = any(fav["name"] == f["name"] for fav in favorites)
+            # ✅ แก้ให้ใช้ title แทน name
+            is_fav = any(fav["title"] == f["name"] for fav in favorites)
             heart_icon = ft.Image(
                 src="heart.png" if is_fav else "heart_border.png",
                 width=26,
@@ -80,10 +81,12 @@ def categories_view(page: ft.Page) -> ft.View:
 
             def toggle_favorite(e, food=f, heart=heart_icon):
                 current_favorites = load_favorites()
-                if any(fav["name"] == food["name"] for fav in current_favorites):
+                # ✅ ใช้ title แทน name
+                if any(fav["title"] == food["name"] for fav in current_favorites):
                     # ลบออกจาก favorite
-                    current_favorites = [fav for fav in current_favorites if fav["name"] != food["name"]]
+                    current_favorites = [fav for fav in current_favorites if fav["title"] != food["name"]]
                     heart.src = "heart_border.png"
+                    msg = f"ลบ {food['name']} ออกจากรายการโปรดแล้ว"
                 else:
                     # เพิ่มเข้า favorite
                     current_favorites.append(
@@ -95,8 +98,13 @@ def categories_view(page: ft.Page) -> ft.View:
                         }
                     )
                     heart.src = "heart.png"
+                    msg = f"เพิ่ม {food['name']} ในรายการโปรดแล้ว"
+
                 save_favorites(current_favorites)
+                page.snack_bar = ft.SnackBar(ft.Text(msg), bgcolor=BRAND_ORANGE)
+                page.snack_bar.open = True
                 heart.update()
+                page.update()
 
             card = ft.Container(
                 bgcolor=ft.Colors.WHITE,

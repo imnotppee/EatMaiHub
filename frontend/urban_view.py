@@ -1,74 +1,73 @@
 import flet as ft
-import json
-import os
+import json, os, datetime
 
 # ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
-# ---------- path ของ favorite ----------
+# ---------- path ----------
 FAV_PATH = os.path.join(os.path.dirname(__file__), "data", "favorite.json")
+REVIEW_PATH = os.path.join(os.path.dirname(__file__), "data", "review_data.json")
 
-
-def load_favorites():
-    if os.path.exists(FAV_PATH):
-        with open(FAV_PATH, "r", encoding="utf-8") as f:
+# ---------- โหลด / บันทึก ----------
+def load_json(path, default):
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    return []
+    return default
 
+def save_json(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
-def save_favorites(favorites):
-    os.makedirs(os.path.dirname(FAV_PATH), exist_ok=True)
-    with open(FAV_PATH, "w", encoding="utf-8") as f:
-        json.dump(favorites, f, ensure_ascii=False, indent=2)
+def load_reviews():
+    return load_json(REVIEW_PATH, {"reviews": []})
+
+def save_reviews(data):
+    save_json(REVIEW_PATH, data)
 
 
 def build_urban_view(page: ft.Page) -> ft.View:
     # ---------- โหลดข้อมูลร้าน ----------
     data_path = os.path.join(os.path.dirname(__file__), "data", "urban_data.json")
-    if not os.path.exists(data_path):
-        raise FileNotFoundError("❌ ไม่พบไฟล์ data/urban_data.json")
-
     with open(data_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    favorites = load_favorites()
+    favorites = load_json(FAV_PATH, [])
+    reviews_data = load_reviews()
+    restaurant_name = data.get("name", "Urban Street")
+    banner_img = data.get("banner", [""])[0] if data.get("banner") else ""
 
-    restaurant_info = {
-        "title": data.get("name", "ไม่ระบุชื่อร้าน"),
-        "category": data.get("review", ""),
-        "time": "3 ตุลาคม 2568 13:40 น.",
-        "image": data.get("banner", [""])[0] if data.get("banner") else "",
-    }
-
-    # ---------- ตรวจว่าชอบแล้วหรือยัง ----------
+    # ---------- ตรวจ favorite ----------
     def is_favorite():
-        return any(f["title"] == restaurant_info["title"] for f in favorites)
-
-    # ---------- ปุ่มหัวใจ ----------
-    heart_icon = ft.IconButton(
-        icon=ft.Icons.FAVORITE if is_favorite() else ft.Icons.FAVORITE_BORDER,
-        icon_color=BRAND_ORANGE,
-        icon_size=28,
-    )
+        return any(f["title"] == restaurant_name for f in favorites)
 
     def toggle_favorite(e):
         nonlocal favorites
         if is_favorite():
-            favorites = [f for f in favorites if f["title"] != restaurant_info["title"]]
+            favorites = [f for f in favorites if f["title"] != restaurant_name]
             heart_icon.icon = ft.Icons.FAVORITE_BORDER
+            heart_icon.icon_color = ft.Colors.GREY
+            msg = "ลบออกจากรายการโปรดแล้ว"
         else:
-            favorites.append(restaurant_info)
+            favorites.append({
+                "title": restaurant_name,
+                "image": banner_img
+            })
             heart_icon.icon = ft.Icons.FAVORITE
-        save_favorites(favorites)
-        heart_icon.update()
+            heart_icon.icon_color = BRAND_ORANGE
+            msg = "เพิ่มในรายการโปรดแล้ว"
+        save_json(FAV_PATH, favorites)
 
-    heart_icon.on_click = toggle_favorite
+        page.snack_bar = ft.SnackBar(ft.Text(msg), bgcolor=BRAND_ORANGE)
+        page.snack_bar.open = True
+        page.update()
 
     # ---------- Header ----------
     header = ft.Container(
         width=PHONE_W,
-        padding=ft.padding.only(left=16, right=16, top=30, bottom=10),
+        padding=ft.padding.only(left=12, right=12, top=28, bottom=10),
         gradient=ft.LinearGradient(
             begin=ft.alignment.top_center,
             end=ft.alignment.bottom_center,
@@ -90,53 +89,9 @@ def build_urban_view(page: ft.Page) -> ft.View:
                         on_click=lambda e: page.go("/highlight"),
                     ),
                 ),
-                ft.Image(src="logo.png", width=100, height=80),
-                ft.Container(width=36),
+                ft.Image(src="logo.png", width=90, height=60),
+                ft.Container(width=40),
             ],
-        ),
-    )
-
-    # ---------- แบนเนอร์ ----------
-    banner_images = data.get("banner", [])
-    banner_section = ft.Container(
-        width=PHONE_W,
-        height=210,
-        clip_behavior=ft.ClipBehavior.HARD_EDGE,
-        content=ft.Image(src=banner_images[0] if banner_images else "", fit=ft.ImageFit.COVER),
-    )
-
-    # ---------- ข้อมูลร้าน ----------
-    info_section = ft.Container(
-        padding=ft.padding.symmetric(horizontal=16, vertical=10),
-        content=ft.Column(
-            spacing=4,
-            controls=[
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    controls=[
-                        ft.Text(
-                            data.get("name", ""),
-                            size=18,
-                            weight=ft.FontWeight.BOLD,
-                        ),
-                        heart_icon,
-                    ],
-                ),
-                ft.Text(f"รีวิว : {data.get('review', '-')}", size=14, color=ft.Colors.BLACK87),
-                ft.Text(f"ที่อยู่ : {data.get('address', '-')}", size=14, color=ft.Colors.BLACK87),
-                ft.Divider(color=ft.Colors.BLACK12),
-            ],
-        ),
-    )
-
-    # ---------- หัวข้อเมนู ----------
-    menu_title = ft.Container(
-        padding=ft.padding.only(left=16, bottom=6),
-        content=ft.Text(
-            "เมนูแนะนำ",
-            size=16,
-            weight=ft.FontWeight.BOLD,
-            color=BRAND_ORANGE,
         ),
     )
 
@@ -147,98 +102,189 @@ def build_urban_view(page: ft.Page) -> ft.View:
             height=190,
             bgcolor=ft.Colors.WHITE,
             border_radius=14,
-            shadow=ft.BoxShadow(blur_radius=10, color=ft.Colors.BLACK12),
+            shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.BLACK12),
             padding=ft.padding.all(8),
             content=ft.Column(
-                alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=10,
                 controls=[
-                    ft.Container(
-                        height=110,
-                        width=(PHONE_W - 84) / 2,
-                        border_radius=10,
-                        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-                        content=ft.Image(src=item.get("image", ""), fit=ft.ImageFit.COVER),
-                    ),
-                    ft.Text(
-                        item.get("name", ""),
-                        size=13,
-                        text_align=ft.TextAlign.CENTER,
-                        color=ft.Colors.BLACK87,
-                        weight=ft.FontWeight.W_500,
-                    ),
+                    ft.Image(src=item.get("image", ""), height=110, fit=ft.ImageFit.COVER),
+                    ft.Text(item.get("name", ""), size=13, text_align=ft.TextAlign.CENTER),
                 ],
             ),
         )
 
-    menus = data.get("menus", [])
     menu_grid = ft.Row(
         wrap=True,
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=16,
         run_spacing=16,
-        controls=[menu_card(m) for m in menus],
+        controls=[menu_card(m) for m in data.get("menus", [])],
     )
 
-    # ---------- Bottom Navigation ----------
-    def nav_item(icon: str, label: str, route=None, active=False):
-        return ft.GestureDetector(
-            on_tap=lambda e: page.go(route) if route else None,
-            content=ft.Column(
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=2,
-                controls=[
-                    ft.Image(src=icon, width=26, height=26, fit=ft.ImageFit.CONTAIN),
-                    ft.Text(
-                        label,
-                        size=10,
-                        color=BRAND_ORANGE if active else ft.Colors.BLACK87,
-                    ),
-                ],
-            ),
+    # ---------- ปุ่ม “กินแล้ว” ----------
+    review_entry = {"is_eaten": False}
+    def toggle_eaten(e):
+        review_entry["is_eaten"] = not review_entry["is_eaten"]
+        update_eat_button()
+
+        msg = "บันทึกว่า 'กินแล้ว'" if review_entry["is_eaten"] else "ยกเลิกสถานะ 'กินแล้ว'"
+        page.snack_bar = ft.SnackBar(ft.Text(msg), bgcolor=BRAND_ORANGE)
+        page.snack_bar.open = True
+        page.update()
+
+    def update_eat_button():
+        if review_entry["is_eaten"]:
+            eat_btn.text = "กินแล้ว"
+            eat_btn.bgcolor = BRAND_ORANGE
+        else:
+            eat_btn.text = "ยังไม่ได้กิน"
+            eat_btn.bgcolor = ft.Colors.GREY_400
+        page.update()
+
+    eat_btn = ft.ElevatedButton(
+        text="ยังไม่ได้กิน",
+        bgcolor=ft.Colors.GREY_400,
+        color=ft.Colors.WHITE,
+        width=180,
+        height=50,
+        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=30)),
+        on_click=toggle_eaten,
+    )
+
+    # ---------- ให้คะแนน ----------
+    selected_stars = 0
+    stars = []
+    def update_stars(index):
+        nonlocal selected_stars
+        selected_stars = index + 1
+        for i, s in enumerate(stars):
+            s.icon = ft.Icons.STAR if i < selected_stars else ft.Icons.STAR_BORDER
+        page.update()
+
+    for i in range(5):
+        star = ft.IconButton(
+            icon=ft.Icons.STAR_BORDER,
+            icon_color=BRAND_ORANGE,
+            icon_size=36,
+            on_click=lambda e, i=i: update_stars(i),
         )
+        stars.append(star)
 
-    bottom_nav = ft.Container(
-        bgcolor=ft.Colors.WHITE,
-        border=ft.border.only(top=ft.BorderSide(1, ft.Colors.BLACK12)),
-        height=65,
-        padding=10,
-        content=ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_AROUND,
-            controls=[
-                nav_item("home.png", "Home", route="/home"),
-                nav_item("heart.png", "Favorite", route="/favorite"),
-                nav_item("review.png", "Review", route="/review"),
-                nav_item("more.png", "More", route="/more"),
-            ],
-        ),
+    review_field = ft.TextField(
+        hint_text="เขียนรีวิว...",
+        multiline=True,
+        min_lines=3,
+        max_lines=5,
+        width=PHONE_W - 60,
+        border_radius=10,
+        border_color=ft.Colors.BLACK26,
     )
 
-    # ---------- Layout หลัก ----------
-    layout = ft.Stack(
+    # ---------- ปุ่มส่งรีวิว ----------
+    def send_review(e):
+        nonlocal selected_stars
+        if not review_entry["is_eaten"]:
+            page.snack_bar = ft.SnackBar(ft.Text("กรุณากด 'กินแล้ว' ก่อนรีวิว"), bgcolor="red")
+            page.snack_bar.open = True
+            page.update()
+            return
+        if selected_stars == 0 or not review_field.value.strip():
+            page.snack_bar = ft.SnackBar(ft.Text("กรุณาให้คะแนนและเขียนรีวิวก่อนส่ง"), bgcolor="red")
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        # ✅ เพิ่มรีวิวใหม่ทุกครั้ง (ไม่เขียนทับ)
+        new_review = {
+            "restaurant": restaurant_name,
+            "image": banner_img,
+            "is_eaten": True,
+            "is_reviewed": True,
+            "stars": selected_stars,
+            "comment": review_field.value.strip(),
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        }
+        reviews_data["reviews"].append(new_review)
+        save_reviews(reviews_data)
+
+        # ล้างฟอร์มหลังส่ง
+        review_field.value = ""
+        for s in stars:
+            s.icon = ft.Icons.STAR_BORDER
+        selected_stars = 0
+
+        page.snack_bar = ft.SnackBar(ft.Text("ส่งรีวิวสำเร็จ! เพิ่มรีวิวใหม่แล้ว"), bgcolor="green")
+        page.snack_bar.open = True
+        page.update()
+
+    # ---------- ส่วนรีวิว ----------
+    review_section = ft.Column(
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         controls=[
-            ft.Column(
-                expand=True,
-                scroll=ft.ScrollMode.ALWAYS,
-                controls=[
-                    header,
-                    banner_section,
-                    info_section,
-                    menu_title,
-                    ft.Container(
-                        padding=ft.padding.symmetric(horizontal=16),
-                        alignment=ft.alignment.center,
-                        content=menu_grid,
-                    ),
-                    ft.Container(height=80),  # เผื่อพื้นที่ให้ bottom nav
-                ],
+            eat_btn,
+            ft.Container(height=20),
+            ft.Text("ให้คะแนนร้าน", size=16, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
+            ft.Row(controls=stars, alignment=ft.MainAxisAlignment.CENTER),
+            ft.Container(height=10),
+            review_field,
+            ft.Container(height=10),
+            ft.ElevatedButton(
+                text="ส่งรีวิว",
+                bgcolor=BRAND_ORANGE,
+                color=ft.Colors.WHITE,
+                width=150,
+                height=40,
+                on_click=send_review,
             ),
-            ft.Container(bottom=0, left=0, right=0, content=bottom_nav),
         ],
     )
 
-    # ---------- Frame ----------
+    # ---------- ปุ่มหัวใจข้างชื่อร้าน ----------
+    heart_icon = ft.IconButton(
+        icon=ft.Icons.FAVORITE if is_favorite() else ft.Icons.FAVORITE_BORDER,
+        icon_color=BRAND_ORANGE if is_favorite() else ft.Colors.GREY,
+        icon_size=24,
+        on_click=toggle_favorite,
+    )
+
+    # ---------- Layout ----------
+    layout = ft.Column(
+        expand=True,
+        scroll=ft.ScrollMode.ALWAYS,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        controls=[
+            header,
+            ft.Container(width=PHONE_W, height=210, clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                         content=ft.Image(src=banner_img, fit=ft.ImageFit.COVER)),
+            ft.Container(
+                padding=ft.padding.symmetric(horizontal=16, vertical=12),
+                content=ft.Column(
+                    spacing=6,
+                    horizontal_alignment=ft.CrossAxisAlignment.START,
+                    controls=[
+                        ft.Row(
+                            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                            controls=[
+                                ft.Text(restaurant_name, size=18, weight=ft.FontWeight.BOLD),
+                                heart_icon,
+                            ],
+                        ),
+                        ft.Text(data.get("review", "-"), size=14, color=ft.Colors.BLACK87),
+                    ],
+                ),
+            ),
+            ft.Container(
+                padding=ft.padding.only(left=16, bottom=6),
+                alignment=ft.alignment.center_left,
+                content=ft.Text("เมนูแนะนำ", size=16, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
+            ),
+            ft.Container(padding=ft.padding.symmetric(horizontal=16), alignment=ft.alignment.center, content=menu_grid),
+            ft.Divider(thickness=1, color=ft.Colors.BLACK12),
+            ft.Container(alignment=ft.alignment.center, padding=ft.padding.symmetric(horizontal=16), content=review_section),
+            ft.Container(height=80),
+        ],
+    )
+
     return ft.View(
         route="/urban",
         padding=0,
@@ -247,12 +293,7 @@ def build_urban_view(page: ft.Page) -> ft.View:
                 expand=True,
                 bgcolor=ft.Colors.BLACK,
                 alignment=ft.alignment.center,
-                content=ft.Container(
-                    width=PHONE_W,
-                    height=PHONE_H,
-                    bgcolor=ft.Colors.WHITE,
-                    content=layout,
-                ),
+                content=ft.Container(width=PHONE_W, height=PHONE_H, bgcolor=ft.Colors.WHITE, content=layout),
             )
         ],
     )
