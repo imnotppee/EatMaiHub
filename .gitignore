@@ -1,14 +1,26 @@
-# === Backend ===
+# === Python / Backend ===
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.env
-.env.*
 *.log
 *.pid
+*.tmp
+*.bak
+*.swp
 
-# === Database ===
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Environment files
+.env
+.env.*
+*.env
+
+# === Database / Data files ===
 *.sql
 *.dump
 *.backup
@@ -16,19 +28,40 @@ __pycache__/
 *.sqlite3
 pgdata/
 postgres-data/
-data/
 database_data/
 
-# === Frontend ===
+# === Data folder ===
+# 🔒 Ignore ทุกอย่างใน data ก่อน
+data/*
+
+# ✅ แต่ยกเว้นไฟล์ JSON / รูปภาพที่จำเป็นสำหรับแอป
+!data/*.json
+!data/*.png
+!data/*.jpg
+
+# === Frontend / Flet ===
 node_modules/
 build/
 dist/
+*.flet/
+.flet/
+.flet-build/
+__flet_cache__/
+*.spec
 
-# === Editor / OS ===
+# === OS / Editor ===
 .vscode/
-.DS_Store
 .idea/
+.DS_Store
+Thumbs.db
 
 # === Docker ===
 *.sock
 docker-compose.override.yml
+.docker/
+.dockerignore
+
+# === Git / Misc ===
+.gitignore
+*.orig
+*.rej
