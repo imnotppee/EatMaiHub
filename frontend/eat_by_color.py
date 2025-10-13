@@ -83,7 +83,7 @@ def build_color_view(page: ft.Page) -> ft.View:
                         eng_day,
                         color=ft.Colors.WHITE,
                         rotate=ft.Rotate(angle=-1.5708),
-                        size=11,  # ✅ ลดขนาดฟอนต์ลง
+                        size=9,  # ✅ ลดขนาดฟอนต์ลง
                         text_align=ft.TextAlign.CENTER,
                         weight=ft.FontWeight.BOLD
                     ),
