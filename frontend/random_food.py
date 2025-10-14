@@ -9,7 +9,8 @@ PHONE_W, PHONE_H = 412, 917
 
 # ---------- โหลดข้อมูลจาก Backend ----------
 def load_food_data():
-    api_url = "http://127.0.0.1:5001/api/foods"  # URL ของ backend Flask
+    api_url = "http://127.0.0.1:5001/api/random"
+  # URL ของ backend Flask
     try:
         response = requests.get(api_url)
         if response.status_code == 200:
@@ -93,20 +94,20 @@ def build_spin_view(page: ft.Page):
 
         for i in range(5):
             temp = random.choice(foods)
-            random_image.src = f"frontend/photo/menu_bun1.webp/{temp['image']}"
+            random_image.src = f"frontend/photo/{temp['image']}"
             random_name.value = temp["name"]
             page.update()
             time.sleep(0.25)
 
         for i in range(5, total_rounds):
             temp = random.choice(foods)
-            random_image.src = f"photo/{temp['image']}"
+            random_image.src = f"frontend/photo/{temp['image']}"
             random_name.value = temp["name"]
             page.update()
             time.sleep(0.25 + (i - 4) * 0.1)
 
         final_food = random.choice(foods)
-        random_image.src = f"photo/{final_food['image']}"
+        random_image.src = f"frontend/photo/{temp['image']}"
         random_name.value = final_food["name"]
         page.update()
 
