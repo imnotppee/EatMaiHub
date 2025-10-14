@@ -4,7 +4,7 @@ from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-API_URL = "http://127.0.0.1:8000/api/restaurants"  # เปลี่ยนพอร์ต backend เป็น 8000
+API_URL = "http://127.0.0.1:5001/api"
 
 def categories_view(page: ft.Page) -> ft.View:
     current_category = "อาหารไทย"
@@ -37,7 +37,7 @@ def categories_view(page: ft.Page) -> ft.View:
     # ---------- ดึงข้อมูลร้านอาหารจาก backend ----------
     def fetch_restaurants():
         try:
-            res = requests.get(API_URL)
+            res = requests.get(f"{API_URL}/foods")
             res.raise_for_status()
             return res.json()
         except Exception as e:
@@ -46,7 +46,7 @@ def categories_view(page: ft.Page) -> ft.View:
 
     all_restaurants = fetch_restaurants()
 
-    # ฟิลเตอร์ตามหมวดหมู่ (เนื่องจาก backend ไม่มี field category, filter ตามชื่อ)
+    # ฟิลเตอร์ตามหมวดหมู่
     def get_category_restaurants(category_name):
         keyword_map = {
             "อาหารไทย": "ไทย",
@@ -57,9 +57,31 @@ def categories_view(page: ft.Page) -> ft.View:
         return [r for r in all_restaurants if keyword in r.get("name", "")]
 
     food_list_column = ft.Column(spacing=12, scroll=ft.ScrollMode.AUTO, expand=True)
-    food_list_column.controls = []
 
-    # ---------- สร้างการ์ดร้านอาหาร ----------
+    # ---------- 🩷 ฟังก์ชันเพิ่ม/ลบ favorite ----------
+    def toggle_favorite(e, restaurant_id):
+        try:
+            res = requests.post(f"{API_URL}/favorites/toggle", json={
+                "user_id": 1,
+                "restaurant_id": restaurant_id
+            })
+            res.raise_for_status()
+            result = res.json()
+            print("Toggle favorite:", result)
+
+            # เปลี่ยน icon ให้แสดงสถานะ
+            if result.get("status") == "added":
+                e.control.icon = ft.icons.FAVORITE
+                e.control.icon_color = "red"
+            else:
+                e.control.icon = ft.icons.FAVORITE_BORDER
+                e.control.icon_color = ft.Colors.BLACK54
+
+            page.update()
+        except Exception as ex:
+            print("Error toggle favorite:", ex)
+
+    # ---------- การ์ดร้านอาหาร ----------
     def build_food_list(food_items):
         cards = []
         for f in food_items:
@@ -84,7 +106,7 @@ def categories_view(page: ft.Page) -> ft.View:
                             border_radius=12,
                             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
                             content=ft.Image(
-                                src=f.get("banner", "default.png"),
+                                src=f.get("image", "default.png"),
                                 fit=ft.ImageFit.COVER,
                             ),
                         ),
@@ -95,7 +117,7 @@ def categories_view(page: ft.Page) -> ft.View:
                             expand=True,
                             controls=[
                                 ft.Text(
-                                    f"ชื่อร้าน : {f.get('name', '-')}",
+                                    f.get("name", "-"),
                                     size=14,
                                     weight="bold",
                                     color=ft.Colors.BLACK87,
@@ -103,21 +125,14 @@ def categories_view(page: ft.Page) -> ft.View:
                                     overflow="ellipsis",
                                     width=180,
                                 ),
-                                ft.Row(
-                                    spacing=5,
-                                    controls=[
-                                        ft.Icon(name=ft.Icons.STAR_ROUNDED, color=BRAND_ORANGE, size=18),
-                                        ft.Text(f"รีวิว : {f.get('review', '-')}", size=13, color=BRAND_ORANGE),
-                                    ],
-                                ),
-                                ft.Row(
-                                    spacing=5,
-                                    controls=[
-                                        ft.Icon(name=ft.Icons.LOCATION_ON_ROUNDED, color="#FF6F61", size=18),
-                                        ft.Text(f"ที่อยู่ : {f.get('address', '-')}", size=12, color=ft.Colors.BLACK54),
-                                    ],
-                                ),
+                                ft.Text(f"เวลาเปิด: {f.get('open_hours', '-')}", size=12, color=ft.Colors.BLACK54),
+                                ft.Text(f"ที่อยู่: {f.get('location', '-')}", size=12, color=ft.Colors.BLACK54),
                             ],
+                        ),
+                        ft.IconButton(
+                            icon=ft.icons.FAVORITE_BORDER,
+                            icon_color=ft.Colors.BLACK54,
+                            on_click=lambda e, rid=f["id"]: toggle_favorite(e, rid),
                         ),
                     ],
                 ),
@@ -188,7 +203,10 @@ def categories_view(page: ft.Page) -> ft.View:
                     content=ft.Column(
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=2,
-                        controls=[ft.Image(src="home.png", width=28, height=28, fit=ft.ImageFit.CONTAIN), ft.Text("Home", size=10)],
+                        controls=[
+                            ft.Image(src="home.png", width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                            ft.Text("Home", size=10),
+                        ],
                     ),
                 ),
                 ft.GestureDetector(
@@ -196,7 +214,10 @@ def categories_view(page: ft.Page) -> ft.View:
                     content=ft.Column(
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=2,
-                        controls=[ft.Image(src="heart.png", width=28, height=28, fit=ft.ImageFit.CONTAIN), ft.Text("Favorite", size=10)],
+                        controls=[
+                            ft.Image(src="heart.png", width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                            ft.Text("Favorite", size=10),
+                        ],
                     ),
                 ),
             ],
