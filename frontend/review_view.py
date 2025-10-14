@@ -1,58 +1,42 @@
 import flet as ft
-import json, os
+import requests
 from functools import partial
 
+# ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-REVIEW_PATH = os.path.join(os.path.dirname(__file__), "data", "review_data.json")
 
-
-import psycopg2
-
+# ---------- โหลดข้อมูลรีวิวจาก API ----------
 def load_review():
     try:
-        conn = psycopg2.connect(
-            host="localhost",
-            database="Eat_Mai_Hub",   # ชื่อฐานข้อมูลใน pgAdmin
-            user="postgres",          # ชื่อผู้ใช้
-            password="1234"           # รหัสผ่านของคุณ
-        )
-        cur = conn.cursor()
-
-        # ดึงข้อมูลจากตาราง review
-        cur.execute("""
-            SELECT restaurant_name, menu_name, rating, review_text
-            FROM review;
-        """)
-        rows = cur.fetchall()
-
-        # แปลงข้อมูลให้อยู่ในรูปแบบเดิมที่ UI ใช้
-        reviews = [
-            {
-                "restaurant": r[0],
-                "menu_name": r[1],
-                "stars": r[2],
-                "comment": r[3],
-                "image": "photo/default.png",  # ใส่ภาพ default ชั่วคราว
-                "is_eaten": True,
-                "is_reviewed": True
-            }
-            for r in rows
-        ]
-
-        cur.close()
-        conn.close()
-        return {"review": review}
-
+        res = requests.get("http://127.0.0.1:5001/api/review")  # ✅ ดึงจาก Flask API
+        if res.status_code == 200:
+            rows = res.json()
+            review = [
+                {
+                    "restaurant": r["restaurant_name"],
+                    "menu_name": r["menu_name"],
+                    "stars": r["rating"],
+                    "comment": r["review_text"],
+                    "image": "photo/default.png",
+                    "is_eaten": True,
+                    "is_reviewed": True
+                }
+                for r in rows
+            ]
+            return {"review": review}
+        else:
+            print(f"⚠️ API Error: {res.status_code}")
+            return {"review": []}
     except Exception as e:
-        print(f"❌ Database error: {e}")
+        print(f"❌ Network error: {e}")
         return {"review": []}
 
 
-
+# ---------- ฟังก์ชันสร้างหน้ารีวิว ----------
 def build_review_view(page: ft.Page) -> ft.View:
-    data = load_reviews()
-    reviews = data.get("review", [])
+    data = load_review()
+    review = data.get("review", [])
 
     reviewed = [r for r in review if r.get("is_reviewed")]
     pending = [r for r in review if r.get("is_eaten") and not r.get("is_reviewed")]
@@ -88,7 +72,7 @@ def build_review_view(page: ft.Page) -> ft.View:
     # ---------- การ์ดรีวิวแล้ว ----------
     def reviewed_card(r):
         return ft.GestureDetector(
-            on_tap=partial(go_to_restaurant, r["restaurant"]),  # ✅ คลิกทั้งการ์ดเพื่อไปหน้ารีวิว
+            on_tap=partial(go_to_restaurant, r["restaurant"]),
             content=ft.Container(
                 padding=8,
                 margin=ft.margin.symmetric(vertical=5, horizontal=10),
@@ -171,7 +155,7 @@ def build_review_view(page: ft.Page) -> ft.View:
             ),
         )
 
-    # ---------- Header (เพิ่ม Gradient ไล่สี) ----------
+    # ---------- Header ----------
     header = ft.Container(
         gradient=ft.LinearGradient(
             begin=ft.alignment.top_center,
