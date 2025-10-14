@@ -1,7 +1,6 @@
 import flet as ft
-import json
-import os
 import datetime
+import requests
 from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
@@ -9,13 +8,22 @@ PHONE_W, PHONE_H = 412, 917
 
 
 def build_horoscope_view(page: ft.Page) -> ft.View:
-    # ---------- โหลดข้อมูลจาก JSON ----------
-    data_path = os.path.join(os.path.dirname(__file__), "data", "horoscope_foods.json")
-    if not os.path.exists(data_path):
-        raise FileNotFoundError("❌ ไม่พบไฟล์ data/horoscope_foods.json")
+    # ---------- โหลดข้อมูลจาก API ----------
+    API_URL = "http://127.0.0.1:5001/api/horoscope"  # ✅ ถ้า backend อยู่เครื่องเดียวกัน
+    # ถ้ารัน backend บนเครื่องอื่น เช่น IP 10.117.10.236 ให้ใช้:
+    # API_URL = "http://10.117.10.236:5001/api/horoscope"
 
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    try:
+        response = requests.get(API_URL)
+        if response.status_code == 200:
+            data = response.json()
+            print("✅ โหลดข้อมูลจาก API สำเร็จ")
+        else:
+            print(f"❌ API error: {response.status_code}")
+            data = {}
+    except Exception as e:
+        print("❌ โหลดข้อมูลจาก API ไม่ได้:", e)
+        data = {}
 
     # ---------- ตรวจวันปัจจุบัน ----------
     weekday_map = {
@@ -161,6 +169,7 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
             ],
         ),
     )
+
     # ---------- Layout รวม ----------
     layout = ft.Column(
         expand=True,
