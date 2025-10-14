@@ -16,6 +16,8 @@ from horoscope_view import build_horoscope_view
 from random_food import build_spin_view
 from nearby_view import build_nearby_view
 from favorite_view import build_favorite_view
+from eat_by_color import build_color_view  
+
 
 
 
@@ -74,8 +76,8 @@ def main(page: ft.Page):
             page.views.append(build_nearby_view(page))
         elif r == "/favorite":
             page.views.append(build_favorite_view(page))
-
-
+        elif r == "/color":        # ✅ เพิ่ม route ใหม่
+            page.views.append(build_color_view(page))
         else:
             page.views.append(build_login_view(page))  # ✅ default = หน้า Login
 
