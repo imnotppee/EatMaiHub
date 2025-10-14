@@ -8,7 +8,7 @@ CORS(app)
 # ✅ เชื่อมต่อฐานข้อมูล PostgreSQL
 def get_conn():
     return psycopg2.connect(
-        host="localhost",
+        host="10.117.10.236",
         database="Eat_Mai_Hub",
         user="postgres",
         password="1234"
@@ -46,6 +46,36 @@ def get_highlights():
     ]
     return jsonify(highlights)
 
-# -------------------- 🚀 Run server --------------------
+# -------------------- 💬 API: ดึงข้อมูลรีวิว --------------------
+@app.route("/api/review", methods=["GET"])
+def get_review():
+    conn = get_conn()
+    cur = conn.cursor()
+    # ✅ ดึงคอลัมน์ทั้งหมดจากตาราง review
+    cur.execute("""
+        SELECT review_id, restaurant_name, menu_name, rating, review_text
+        FROM review
+        ORDER BY review_id DESC;
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # ✅ แปลงข้อมูลให้เป็น JSON list
+    review = [
+        {
+            "review_id": r[0],
+            "restaurant_name": r[1].strip() if r[1] else None,
+            "menu_name": r[2].strip() if r[2] else None,
+            "rating": r[3],
+            "review_text": r[4]
+        }
+        for r in rows
+    ]
+
+    return jsonify(review)
+
+
+
 if __name__ == "__main__":
     app.run(port=5001, debug=True)

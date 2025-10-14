@@ -7,19 +7,55 @@ PHONE_W, PHONE_H = 412, 917
 REVIEW_PATH = os.path.join(os.path.dirname(__file__), "data", "review_data.json")
 
 
-def load_reviews():
-    if os.path.exists(REVIEW_PATH):
-        with open(REVIEW_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {"reviews": []}
+import psycopg2
+
+def load_review():
+    try:
+        conn = psycopg2.connect(
+            host="localhost",
+            database="Eat_Mai_Hub",   # ชื่อฐานข้อมูลใน pgAdmin
+            user="postgres",          # ชื่อผู้ใช้
+            password="1234"           # รหัสผ่านของคุณ
+        )
+        cur = conn.cursor()
+
+        # ดึงข้อมูลจากตาราง review
+        cur.execute("""
+            SELECT restaurant_name, menu_name, rating, review_text
+            FROM review;
+        """)
+        rows = cur.fetchall()
+
+        # แปลงข้อมูลให้อยู่ในรูปแบบเดิมที่ UI ใช้
+        reviews = [
+            {
+                "restaurant": r[0],
+                "menu_name": r[1],
+                "stars": r[2],
+                "comment": r[3],
+                "image": "photo/default.png",  # ใส่ภาพ default ชั่วคราว
+                "is_eaten": True,
+                "is_reviewed": True
+            }
+            for r in rows
+        ]
+
+        cur.close()
+        conn.close()
+        return {"review": review}
+
+    except Exception as e:
+        print(f"❌ Database error: {e}")
+        return {"review": []}
+
 
 
 def build_review_view(page: ft.Page) -> ft.View:
     data = load_reviews()
-    reviews = data.get("reviews", [])
+    reviews = data.get("review", [])
 
-    reviewed = [r for r in reviews if r.get("is_reviewed")]
-    pending = [r for r in reviews if r.get("is_eaten") and not r.get("is_reviewed")]
+    reviewed = [r for r in review if r.get("is_reviewed")]
+    pending = [r for r in review if r.get("is_eaten") and not r.get("is_reviewed")]
 
     # ---------- ฟังก์ชันเปลี่ยนหน้า ----------
     def go_to_restaurant(name, e):
