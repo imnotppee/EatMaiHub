@@ -1,45 +1,13 @@
 import flet as ft
-import json
-import os
+import requests
 from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-FAV_PATH = os.path.join(os.path.dirname(__file__), "data", "favorite.json")
-
-
-# ---------- โหลด / บันทึก Favorites ----------
-def load_favorites():
-    if os.path.exists(FAV_PATH):
-        with open(FAV_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
-
-
-def save_favorites(favorites):
-    os.makedirs(os.path.dirname(FAV_PATH), exist_ok=True)
-    with open(FAV_PATH, "w", encoding="utf-8") as f:
-        json.dump(favorites, f, ensure_ascii=False, indent=2)
-
-
-# ---------- โหลด JSON ----------
-def load_data(filename: str):
-    path = os.path.join(os.path.dirname(__file__), "data", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
+API_URL = "http://127.0.0.1:8000/api/restaurants"  # เปลี่ยนพอร์ต backend เป็น 8000
 
 def categories_view(page: ft.Page) -> ft.View:
     current_category = "อาหารไทย"
-    data_map = {
-        "อาหารไทย": ("thai_food.json", "thai_foods"),
-        "อาหารญี่ปุ่น": ("japan_food.json", "japan_foods"),
-        "อาหารฟาสต์ฟู้ด": ("fast_food.json", "fast_foods"),
-    }
-
-    data = load_data(data_map[current_category][0])
-    foods = data.get(data_map[current_category][1], [])
-    favorites = load_favorites()
 
     # ---------- Header ----------
     header_row = ft.Row(
@@ -66,45 +34,35 @@ def categories_view(page: ft.Page) -> ft.View:
         content=ft.Column(spacing=12, controls=[header_row, search]),
     )
 
-    # ---------- การ์ดร้านอาหาร + หัวใจ Favorite ----------
+    # ---------- ดึงข้อมูลร้านอาหารจาก backend ----------
+    def fetch_restaurants():
+        try:
+            res = requests.get(API_URL)
+            res.raise_for_status()
+            return res.json()
+        except Exception as e:
+            print("Error fetching restaurants:", e)
+            return []
+
+    all_restaurants = fetch_restaurants()
+
+    # ฟิลเตอร์ตามหมวดหมู่ (เนื่องจาก backend ไม่มี field category, filter ตามชื่อ)
+    def get_category_restaurants(category_name):
+        keyword_map = {
+            "อาหารไทย": "ไทย",
+            "อาหารญี่ปุ่น": "ญี่ปุ่น",
+            "อาหารฟาสต์ฟู้ด": "ฟาสต์ฟู้ด"
+        }
+        keyword = keyword_map.get(category_name, "")
+        return [r for r in all_restaurants if keyword in r.get("name", "")]
+
+    food_list_column = ft.Column(spacing=12, scroll=ft.ScrollMode.AUTO, expand=True)
+    food_list_column.controls = []
+
+    # ---------- สร้างการ์ดร้านอาหาร ----------
     def build_food_list(food_items):
         cards = []
-
         for f in food_items:
-            is_fav = any(
-                fav.get("title") == f["name"] or fav.get("name") == f["name"]
-                for fav in favorites
-            )
-
-            heart_icon = ft.IconButton(
-                icon=ft.Icons.FAVORITE if is_fav else ft.Icons.FAVORITE_BORDER,
-                icon_color=BRAND_ORANGE,
-                icon_size=24,
-            )
-
-            def toggle_favorite(e, food=f, heart=heart_icon):
-                current_favorites = load_favorites()
-                if any(fav.get("title") == food["name"] or fav.get("name") == food["name"] for fav in current_favorites):
-                    # ❌ ลบออกจาก favorite
-                    current_favorites = [fav for fav in current_favorites if fav.get("title") != food["name"]]
-                    heart.icon = ft.Icons.FAVORITE_BORDER
-                else:
-                    # ✅ เพิ่มเข้า favorite
-                    current_favorites.append(
-                        {
-                            "title": food["name"],
-                            "category": current_category,
-                            "image": f"assets/{food['image']}",
-                            "rating": food.get("rating", ""),
-                            "address": food.get("address", ""),
-                        }
-                    )
-                    heart.icon = ft.Icons.FAVORITE
-                save_favorites(current_favorites)
-                heart.update()
-
-            heart_icon.on_click = toggle_favorite
-
             card = ft.Container(
                 bgcolor=ft.Colors.WHITE,
                 border_radius=22,
@@ -126,7 +84,7 @@ def categories_view(page: ft.Page) -> ft.View:
                             border_radius=12,
                             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
                             content=ft.Image(
-                                src=f"assets/{f['image']}",
+                                src=f.get("banner", "default.png"),
                                 fit=ft.ImageFit.COVER,
                             ),
                         ),
@@ -136,34 +94,27 @@ def categories_view(page: ft.Page) -> ft.View:
                             spacing=6,
                             expand=True,
                             controls=[
-                                ft.Row(
-                                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                                    controls=[
-                                        ft.Text(
-                                            f"ชื่อร้าน : {f['name']}",
-                                            size=14,                # ✅ ฟอนต์เล็กลง
-                                            weight="bold",
-                                            color=ft.Colors.BLACK87,
-                                            max_lines=1,            # ✅ บรรทัดเดียว
-                                            overflow="ellipsis",    # ✅ ถ้ายาวจะมี ...
-                                            width=180,              # ✅ จำกัดความกว้าง
-                                        ),
-                                        heart_icon,
-                                    ],
+                                ft.Text(
+                                    f"ชื่อร้าน : {f.get('name', '-')}",
+                                    size=14,
+                                    weight="bold",
+                                    color=ft.Colors.BLACK87,
+                                    max_lines=1,
+                                    overflow="ellipsis",
+                                    width=180,
                                 ),
                                 ft.Row(
                                     spacing=5,
                                     controls=[
                                         ft.Icon(name=ft.Icons.STAR_ROUNDED, color=BRAND_ORANGE, size=18),
-                                        ft.Text(f"รีวิว : {f['rating']} ดาว", size=13, color=BRAND_ORANGE),
+                                        ft.Text(f"รีวิว : {f.get('review', '-')}", size=13, color=BRAND_ORANGE),
                                     ],
                                 ),
                                 ft.Row(
                                     spacing=5,
                                     controls=[
                                         ft.Icon(name=ft.Icons.LOCATION_ON_ROUNDED, color="#FF6F61", size=18),
-                                        ft.Text(f"ที่อยู่ : {f['address']}", size=12, color=ft.Colors.BLACK54),
+                                        ft.Text(f"ที่อยู่ : {f.get('address', '-')}", size=12, color=ft.Colors.BLACK54),
                                     ],
                                 ),
                             ],
@@ -174,23 +125,16 @@ def categories_view(page: ft.Page) -> ft.View:
             cards.append(card)
         return cards
 
-    food_list_column = ft.Column(spacing=12, scroll=ft.ScrollMode.AUTO, expand=True, controls=build_food_list(foods))
+    # โหลด category แรกตอนเริ่ม
+    food_list_column.controls = build_food_list(get_category_restaurants(current_category))
 
     # ---------- เปลี่ยนหมวด ----------
     def change_category(e):
         nonlocal current_category
         current_category = e.control.data
-        json_file, key = data_map[current_category]
-        new_data = load_data(json_file)
-        new_foods = new_data.get(key, [])
         food_list_column.controls.clear()
-        for c in build_food_list(new_foods):
-            food_list_column.controls.append(c)
+        food_list_column.controls.extend(build_food_list(get_category_restaurants(current_category)))
         title.value = f"ร้านอาหาร - {current_category}"
-        for btn in category_buttons.controls:
-            label = btn.content.controls[1]
-            label.color = BRAND_ORANGE if btn.data == current_category else ft.Colors.BLACK87
-            label.weight = "bold" if btn.data == current_category else "normal"
         page.update()
 
     # ---------- ปุ่มหมวด ----------
@@ -231,19 +175,6 @@ def categories_view(page: ft.Page) -> ft.View:
     )
 
     # ---------- Bottom nav ----------
-    def nav_item(icon: str, label: str, route=None, active=False):
-        return ft.GestureDetector(
-            on_tap=lambda e: page.go(route) if route else None,
-            content=ft.Column(
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=2,
-                controls=[
-                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
-                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
-                ],
-            ),
-        )
-
     bottom_nav = ft.Container(
         bgcolor=Colors.WHITE,
         border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
@@ -252,17 +183,28 @@ def categories_view(page: ft.Page) -> ft.View:
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_AROUND,
             controls=[
-                nav_item("home.png", "Home", route="/home"),
-                nav_item("heart.png", "Favorite", route="/favorite"),
-                nav_item("review.png", "Review"),
-                nav_item("more.png", "More"),
+                ft.GestureDetector(
+                    on_tap=lambda e: page.go("/home"),
+                    content=ft.Column(
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=2,
+                        controls=[ft.Image(src="home.png", width=28, height=28, fit=ft.ImageFit.CONTAIN), ft.Text("Home", size=10)],
+                    ),
+                ),
+                ft.GestureDetector(
+                    on_tap=lambda e: page.go("/favorite"),
+                    content=ft.Column(
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=2,
+                        controls=[ft.Image(src="heart.png", width=28, height=28, fit=ft.ImageFit.CONTAIN), ft.Text("Favorite", size=10)],
+                    ),
+                ),
             ],
         ),
     )
 
-    title = ft.Text("ร้านอาหาร - อาหารไทย", size=18, weight="bold", color=BRAND_ORANGE)
+    title = ft.Text(f"ร้านอาหาร - {current_category}", size=18, weight="bold", color=BRAND_ORANGE)
 
-    # ---------- Body ----------
     scrollable_area = ft.Column(
         spacing=16,
         expand=True,
@@ -275,7 +217,6 @@ def categories_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- พื้นหลังไล่สี ----------
     orange_gradient_bg = ft.Container(
         width=PHONE_W,
         height=340,
