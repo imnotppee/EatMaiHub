@@ -80,16 +80,9 @@ def build_home_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- Feature 4 อัน (รวมฟีเจอร์ทั้งสองเวอร์ชัน) ----------
+    # ---------- Feature 4 อัน ----------
     def feature(icon_src: str, label: str, route=None, on_click=None):
-        """
-        ฟังก์ชันนี้รองรับทั้ง:
-        - route="/path" เพื่อให้ page.go() ไปหน้าใหม่
-        - on_click=lambda e: ... เพื่อใส่ฟังก์ชันเอง
-        """
-        # ถ้ามี route ให้สร้าง handler ไปหน้านั้น ถ้ามี on_click ให้ใช้เอง
         handler = on_click or (lambda e: page.go(route) if route else None)
-
         return ft.GestureDetector(
             on_tap=handler,
             content=ft.Container(
@@ -109,7 +102,6 @@ def build_home_view(page: ft.Page) -> ft.View:
             ),
         )
 
-
     feature_row = ft.Row(
         alignment=ft.MainAxisAlignment.SPACE_AROUND,
         controls=[
@@ -121,8 +113,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         ],
     )
 
-
-    # ---------- ร้านเด็ด (Banner slide ทีละรูป + จุด indicator) ----------
+    # ---------- ร้านเด็ด (แบนเนอร์) ----------
     highlight_title = ft.Row(
         alignment=ft.MainAxisAlignment.START,
         controls=[
@@ -144,7 +135,6 @@ def build_home_view(page: ft.Page) -> ft.View:
         height=180,
     )
 
-    # จุด indicator
     dots = ft.Row(
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=6,
@@ -179,25 +169,22 @@ def build_home_view(page: ft.Page) -> ft.View:
         if start is None or end is None:
             return
         delta = end - start
-        if delta < -50:   # ปัดซ้าย
+        if delta < -50:
             update_banner(current_index + 1)
-        elif delta > 50:  # ปัดขวา
+        elif delta > 50:
             update_banner(current_index - 1)
         drag_start_x["value"] = None
         drag_last_x["value"] = None
 
-    # ✅ เพิ่มให้กด banner แล้วไปหน้าอื่น
-        # ✅ รวมฟังก์ชัน on_banner_tap() ให้รองรับทุกแบนเนอร์
     def on_banner_tap(e):
         if current_index == 0:
-            page.go("/urban")  # banner แรก → Urban Street
+            page.go("/urban")
         elif current_index == 1:
-            page.go("/sunbae")  # banner ที่สอง → Sunbae Korean Restaurant
+            page.go("/sunbae")
         elif current_index == 2:
-            page.go("/hottobun")  # banner ที่สาม → Hotto Bun
+            page.go("/hottobun")
         else:
-            page.go("/highlight")  # fallback ถ้า index เกิน
-
+            page.go("/highlight")
 
     highlight_banner = ft.Column(
         spacing=6,
@@ -284,7 +271,6 @@ def build_home_view(page: ft.Page) -> ft.View:
             ),
         )
 
-
     bottom_nav = ft.Container(
         bgcolor=Colors.WHITE,
         border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
@@ -292,9 +278,9 @@ def build_home_view(page: ft.Page) -> ft.View:
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_AROUND,
             controls=[
-                nav_item("home.png", "Home", active=True),
+                nav_item("home.png", "Home", route="/home", active=True),
                 nav_item("heart.png", "Favorite", route="/favorite"),
-                nav_item("review.png", "Review"),
+                nav_item("review.png", "Review", route="/review"),  # ✅ เพิ่ม route ให้ปุ่มรีวิว
                 nav_item("more.png", "More"),
             ],
         ),

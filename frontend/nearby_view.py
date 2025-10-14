@@ -130,7 +130,7 @@ def build_nearby_view(page: ft.Page) -> ft.View:
         ),
     )
 
-    # ---------- Bottom nav ----------
+    # ---------- Bottom Navigation ----------
     def nav_item(icon: str, label: str, route=None, active=False):
         return ft.GestureDetector(
             on_tap=lambda e: page.go(route) if route else None,
@@ -138,15 +138,18 @@ def build_nearby_view(page: ft.Page) -> ft.View:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=2,
                 controls=[
-                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                    ft.Container(
+                        content=ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                        padding=ft.padding.only(top=2, bottom=2),
+                    ),
                     ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
                 ],
             ),
         )
 
     bottom_nav = ft.Container(
-        bgcolor=Colors.WHITE,
-        border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
+        bgcolor=ft.Colors.WHITE,
+        border=ft.border.only(top=ft.BorderSide(1, ft.Colors.BLACK12)),
         padding=10,
         height=65,
         content=ft.Row(
