@@ -323,3 +323,4 @@ def categories_view(page: ft.Page) -> ft.View:
             )
         ],
     )
+
