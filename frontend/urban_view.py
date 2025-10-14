@@ -1,5 +1,5 @@
 import flet as ft
-import json, os, datetime
+import json, os, datetime, requests
 
 # ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
@@ -28,12 +28,27 @@ def save_reviews(data):
     save_json(REVIEW_PATH, data)
 
 
+# ---------- VIEW หลัก ----------
 def build_urban_view(page: ft.Page) -> ft.View:
-    # ---------- โหลดข้อมูลร้าน ----------
-    data_path = os.path.join(os.path.dirname(__file__), "data", "urban_data.json")
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    # ---------- โหลดข้อมูลร้านจาก Backend ----------
+    API_URL = "http://127.0.0.1:5001/api/urban-street"
 
+    try:
+        res = requests.get(API_URL)
+        res.raise_for_status()
+        data = res.json()
+        print("✅ ดึงข้อมูลจาก Backend สำเร็จ")
+    except Exception as e:
+        print("⚠️ ดึงข้อมูลจาก Backend ไม่สำเร็จ:", e)
+        # ใช้ fallback จากไฟล์ JSON เดิม
+        data_path = os.path.join(os.path.dirname(__file__), "data", "urban_data.json")
+        if os.path.exists(data_path):
+            with open(data_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        else:
+            data = {"name": "Urban Street", "review": "-", "menus": [], "banner": []}
+
+    # ---------- ตัวแปรพื้นฐาน ----------
     favorites = load_json(FAV_PATH, [])
     reviews_data = load_reviews()
     restaurant_name = data.get("name", "Urban Street")
@@ -51,10 +66,7 @@ def build_urban_view(page: ft.Page) -> ft.View:
             heart_icon.icon_color = ft.Colors.GREY
             msg = "ลบออกจากรายการโปรดแล้ว"
         else:
-            favorites.append({
-                "title": restaurant_name,
-                "image": banner_img
-            })
+            favorites.append({"title": restaurant_name, "image": banner_img})
             heart_icon.icon = ft.Icons.FAVORITE
             heart_icon.icon_color = BRAND_ORANGE
             msg = "เพิ่มในรายการโปรดแล้ว"
@@ -126,7 +138,6 @@ def build_urban_view(page: ft.Page) -> ft.View:
     def toggle_eaten(e):
         review_entry["is_eaten"] = not review_entry["is_eaten"]
         update_eat_button()
-
         msg = "บันทึกว่า 'กินแล้ว'" if review_entry["is_eaten"] else "ยกเลิกสถานะ 'กินแล้ว'"
         page.snack_bar = ft.SnackBar(ft.Text(msg), bgcolor=BRAND_ORANGE)
         page.snack_bar.open = True
@@ -154,6 +165,7 @@ def build_urban_view(page: ft.Page) -> ft.View:
     # ---------- ให้คะแนน ----------
     selected_stars = 0
     stars = []
+
     def update_stars(index):
         nonlocal selected_stars
         selected_stars = index + 1
@@ -194,7 +206,6 @@ def build_urban_view(page: ft.Page) -> ft.View:
             page.update()
             return
 
-        # ✅ เพิ่มรีวิวใหม่ทุกครั้ง (ไม่เขียนทับ)
         new_review = {
             "restaurant": restaurant_name,
             "image": banner_img,
@@ -207,13 +218,12 @@ def build_urban_view(page: ft.Page) -> ft.View:
         reviews_data["reviews"].append(new_review)
         save_reviews(reviews_data)
 
-        # ล้างฟอร์มหลังส่ง
         review_field.value = ""
         for s in stars:
             s.icon = ft.Icons.STAR_BORDER
         selected_stars = 0
 
-        page.snack_bar = ft.SnackBar(ft.Text("ส่งรีวิวสำเร็จ! เพิ่มรีวิวใหม่แล้ว"), bgcolor="green")
+        page.snack_bar = ft.SnackBar(ft.Text("ส่งรีวิวสำเร็จ!"), bgcolor="green")
         page.snack_bar.open = True
         page.update()
 
@@ -239,7 +249,7 @@ def build_urban_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- ปุ่มหัวใจข้างชื่อร้าน ----------
+    # ---------- ปุ่มหัวใจ ----------
     heart_icon = ft.IconButton(
         icon=ft.Icons.FAVORITE if is_favorite() else ft.Icons.FAVORITE_BORDER,
         icon_color=BRAND_ORANGE if is_favorite() else ft.Colors.GREY,
