@@ -71,6 +71,15 @@
       "stars": 5,
       "comment": "ดีเลยล่ะ มีน้องหมาน้องแมว",
       "timestamp": "2025-10-14 02:15:43"
+    },
+    {
+      "restaurant": "Urban Street สเต็กถาดปราบเซียน",
+      "image": "banner.png",
+      "is_eaten": true,
+      "is_reviewed": true,
+      "stars": 3,
+      "comment": "อีเก่ง",
+      "timestamp": "2025-10-15 02:47:53"
     }
   ]
 }

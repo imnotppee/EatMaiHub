@@ -11,7 +11,8 @@ def get_conn():
         database="Eat_Mai_Hub",
         user="postgres",
         password="1234"
-    )from flask import Flask, jsonify
+    )
+from flask import Flask, jsonify
 from flask_cors import CORS
 import psycopg2
 
