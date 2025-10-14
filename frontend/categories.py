@@ -71,21 +71,23 @@ def categories_view(page: ft.Page) -> ft.View:
         cards = []
 
         for f in food_items:
-            # ✅ ใช้ title แทน name เพื่อให้ตรงกับโครงสร้าง favorite.json
-            is_fav = any(fav["title"] == f["name"] for fav in favorites)
-            heart_icon = ft.Image(
-                src="heart.png" if is_fav else "heart_border.png",
-                width=26,
-                height=26,
+            is_fav = any(
+                fav.get("title") == f["name"] or fav.get("name") == f["name"]
+                for fav in favorites
+            )
+
+            heart_icon = ft.IconButton(
+                icon=ft.Icons.FAVORITE if is_fav else ft.Icons.FAVORITE_BORDER,
+                icon_color=BRAND_ORANGE,
+                icon_size=24,
             )
 
             def toggle_favorite(e, food=f, heart=heart_icon):
                 current_favorites = load_favorites()
-                if any(fav["title"] == food["name"] for fav in current_favorites):
+                if any(fav.get("title") == food["name"] or fav.get("name") == food["name"] for fav in current_favorites):
                     # ❌ ลบออกจาก favorite
-                    current_favorites = [fav for fav in current_favorites if fav["title"] != food["name"]]
-                    heart.src = "heart_border.png"
-                    msg = f"ลบ {food['name']} ออกจากรายการโปรดแล้ว"
+                    current_favorites = [fav for fav in current_favorites if fav.get("title") != food["name"]]
+                    heart.icon = ft.Icons.FAVORITE_BORDER
                 else:
                     # ✅ เพิ่มเข้า favorite
                     current_favorites.append(
@@ -97,14 +99,9 @@ def categories_view(page: ft.Page) -> ft.View:
                             "address": food.get("address", ""),
                         }
                     )
-                    heart.src = "heart.png"
-                    msg = f"เพิ่ม {food['name']} ในรายการโปรดแล้ว"
-
+                    heart.icon = ft.Icons.FAVORITE
                 save_favorites(current_favorites)
-                page.snack_bar = ft.SnackBar(ft.Text(msg), bgcolor=BRAND_ORANGE)
-                page.snack_bar.open = True
                 heart.update()
-                page.update()
 
             heart_icon.on_click = toggle_favorite
 
@@ -145,12 +142,12 @@ def categories_view(page: ft.Page) -> ft.View:
                                     controls=[
                                         ft.Text(
                                             f"ชื่อร้าน : {f['name']}",
-                                            size=14,
+                                            size=14,                # ✅ ฟอนต์เล็กลง
                                             weight="bold",
                                             color=ft.Colors.BLACK87,
-                                            max_lines=1,
-                                            overflow="ellipsis",
-                                            width=180,
+                                            max_lines=1,            # ✅ บรรทัดเดียว
+                                            overflow="ellipsis",    # ✅ ถ้ายาวจะมี ...
+                                            width=180,              # ✅ จำกัดความกว้าง
                                         ),
                                         heart_icon,
                                     ],

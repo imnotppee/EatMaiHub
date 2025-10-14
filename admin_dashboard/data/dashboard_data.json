@@ -1,0 +1,33 @@
+{
+    "shop_stats": [
+      { "name": "Urban street", "value": 28 },
+      { "name": "MALATIME", "value": 20 },
+      { "name": "Sensei Ramen", "value": 23 },
+      { "name": "Sunbae", "value": 27 },
+      { "name": "Hotto Bun", "value": 15 }
+    ],
+    "monthly_usage": [
+      { "month": "Jan", "value": 120 },
+      { "month": "Feb", "value": 180 },
+      { "month": "Mar", "value": 250 },
+      { "month": "Apr", "value": 200 },
+      { "month": "May", "value": 280 },
+      { "month": "Jun", "value": 180 },
+      { "month": "Jul", "value": 320 }
+    ],
+    "stats": [
+      { "title": "จำนวนผู้ใช้ทั้งหมด", "value": "200", "icon": "PEOPLE" },
+      { "title": "จำนวนร้านอาหารในระบบ", "value": "50", "icon": "RESTAURANT" },
+      { "title": "จำนวนรีวิวทั้งหมด", "value": "89", "icon": "REVIEWS" }
+    ],
+    "top_rated_restaurants": [
+      { "name": "Urban Street", "rating": 4.9, "reviews": 12 },
+      { "name": "MALATIME", "rating": 4.8, "reviews": 8 },
+      { "name": "Sunbae Korean", "rating": 4.7, "reviews": 6 }
+    ],
+    "notes": {
+      "bar_chart_title": "ร้านที่ถูกค้นหามากที่สุด",
+      "line_chart_title": "จำนวนการเข้าใช้งานต่อเดือน"
+    }
+  }
+  
