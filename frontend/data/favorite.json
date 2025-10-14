@@ -1,17 +1,16 @@
 [
   {
-    "title": "Urban Street สเต็กถาดปราบเซียน",
-    "image": "banner.png"
-  },
-  {
-    "title": "Hotto Bun ホットバン",
-    "image": "banner3.png"
-  },
-  {
     "title": "ผัดไทย คลาสสิค",
     "category": "อาหารไทย",
     "image": "assets/thai1.png",
     "rating": "4.6",
     "address": "ถนนคลองกรุง"
+  },
+  {
+    "title": "ตำถาดซอย byเจ๊อ๊อด",
+    "category": "อาหารไทย",
+    "image": "assets/thai2.png",
+    "rating": "4.2",
+    "address": "ลาดกระบัง 11"
   }
 ]
