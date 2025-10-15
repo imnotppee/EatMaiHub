@@ -1,13 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from pydantic import BaseModel
-from models import Random  # ✅ ตาราง random ต้องมีใน models.py
+from models import Random
 
 router = APIRouter(prefix="/api", tags=["Random Food"])
 
-
-# ---------- สร้าง schema สำหรับ response ----------
 class RandomFoodOut(BaseModel):
     id: int
     category: str
@@ -15,10 +15,8 @@ class RandomFoodOut(BaseModel):
     image: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-
-# ---------- Dependency สำหรับเชื่อมต่อฐานข้อมูล ----------
 def get_db():
     db = SessionLocal()
     try:
@@ -26,20 +24,16 @@ def get_db():
     finally:
         db.close()
 
-
-# ---------- ดึงข้อมูลสุ่มอาหาร ----------
-@router.get("/random", response_model=list[RandomFoodOut])
+@router.get("/random")
 def get_random(db: Session = Depends(get_db)):
-    """
-    ดึงข้อมูลทั้งหมดจากตาราง random เพื่อใช้สุ่มอาหารในหน้า frontend
-    """
     try:
-        foods = db.query(Random).all()
+        print("📦 ใช้ฐานข้อมูล:", db.bind.url)
 
+        foods = db.query(Random).all()
         if not foods:
             raise HTTPException(status_code=404, detail="ไม่พบข้อมูลในตาราง random")
 
-        return [
+        data = [
             {
                 "id": food.random_id,
                 "category": food.category,
@@ -48,6 +42,8 @@ def get_random(db: Session = Depends(get_db)):
             }
             for food in foods
         ]
+
+        return JSONResponse(content=jsonable_encoder(data))  # ✅ รองรับภาษาไทย
 
     except Exception as e:
         print("❌ Database error:", e)
