@@ -1,17 +1,6 @@
-# backend/urban_street.py
 from flask import jsonify
-import psycopg2
 
-def get_conn():
-    return psycopg2.connect(
-        host="10.117.10.236",
-        database="Eat_Mai_Hub",
-        user="postgres",
-        password="1234",
-        port=5432
-    )
-
-def register_urban_street_routes(app):
+def register_urban_street_routes(app, get_conn):
     @app.route("/api/urban-street", methods=["GET"])
     def get_urban_street():
         conn = get_conn()

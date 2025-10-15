@@ -58,23 +58,52 @@ def build_urban_view(page: ft.Page) -> ft.View:
     def is_favorite():
         return any(f["title"] == restaurant_name for f in favorites)
 
+    # ---------- แก้เฉพาะส่วนนี้ ----------
     def toggle_favorite(e):
         nonlocal favorites
-        if is_favorite():
-            favorites = [f for f in favorites if f["title"] != restaurant_name]
-            heart_icon.icon = ft.Icons.FAVORITE_BORDER
-            heart_icon.icon_color = ft.Colors.GREY
-            msg = "ลบออกจากรายการโปรดแล้ว"
-        else:
-            favorites.append({"title": restaurant_name, "image": banner_img})
-            heart_icon.icon = ft.Icons.FAVORITE
-            heart_icon.icon_color = BRAND_ORANGE
-            msg = "เพิ่มในรายการโปรดแล้ว"
-        save_json(FAV_PATH, favorites)
+        backend_url = "http://127.0.0.1:5001/api/favorites"
 
+        try:
+            if is_favorite():
+                # ❌ ลบออกจากรายการโปรด (Frontend + Backend)
+                try:
+                    requests.delete(f"{backend_url}/1")  # restaurant_id สมมติ = 1
+                except Exception as err:
+                    print(f"⚠️ ลบ favorites จาก backend ไม่สำเร็จ: {err}")
+
+                favorites = [f for f in favorites if f["title"] != restaurant_name]
+                heart_icon.icon = ft.Icons.FAVORITE_BORDER
+                heart_icon.icon_color = ft.Colors.GREY
+                msg = "ลบออกจากรายการโปรดแล้ว"
+
+            else:
+                # ✅ เพิ่มรายการโปรด (Frontend + Backend)
+                payload = {
+                    "user_id": 1,
+                    "restaurant_id": data.get("id", 1)
+                }
+                try:
+                    res = requests.post(backend_url, json=payload)
+                    if res.status_code == 201:
+                        print("✅ เพิ่ม favorites ใน backend สำเร็จ")
+                    else:
+                        print(f"⚠️ เพิ่ม favorites ใน backend ไม่สำเร็จ: {res.text}")
+                except Exception as err:
+                    print(f"⚠️ เชื่อมต่อ backend ไม่สำเร็จ: {err}")
+
+                favorites.append({"title": restaurant_name, "image": banner_img})
+                heart_icon.icon = ft.Icons.FAVORITE
+                heart_icon.icon_color = BRAND_ORANGE
+                msg = "เพิ่มในรายการโปรดแล้ว"
+
+        except Exception as err:
+            msg = f"❌ เกิดข้อผิดพลาด: {err}"
+
+        save_json(FAV_PATH, favorites)
         page.snack_bar = ft.SnackBar(ft.Text(msg), bgcolor=BRAND_ORANGE)
         page.snack_bar.open = True
         page.update()
+    # ---------- จบการแก้เฉพาะส่วนนี้ ----------
 
     # ---------- Header ----------
     header = ft.Container(

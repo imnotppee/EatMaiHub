@@ -1,19 +1,6 @@
-# backend/eat_by_color.py
 from flask import jsonify
-import psycopg2
 
-# -------------------- 🧩 ฟังก์ชันเชื่อมต่อฐานข้อมูล --------------------
-def get_conn():
-    return psycopg2.connect(
-        host="10.117.10.236",
-        database="Eat_Mai_Hub",
-        user="postgres",
-        password="1234",
-        port=5432
-    )
-
-# -------------------- 🌈 ฟังก์ชันลงทะเบียน route --------------------
-def register_eat_by_color_routes(app):
+def register_eat_by_color_routes(app, get_conn):
     @app.route("/api/color-menus", methods=["GET"])
     def get_color_menus():
         conn = get_conn()

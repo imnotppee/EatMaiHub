@@ -5,14 +5,17 @@ BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 API_URL = "http://127.0.0.1:5001/api/reviews"
 
+
 def build_review_view(page: ft.Page) -> ft.View:
     try:
         res = requests.get(API_URL)
         res.raise_for_status()
         reviews = res.json()
-    except:
+    except Exception as e:
+        print("⚠️ โหลดข้อมูลไม่สำเร็จ:", e)
         reviews = []
 
+    # ✅ การ์ดแสดงรีวิว
     def review_card(r):
         return ft.Container(
             bgcolor=ft.Colors.WHITE,
@@ -23,10 +26,23 @@ def build_review_view(page: ft.Page) -> ft.View:
             content=ft.Column(
                 spacing=3,
                 controls=[
-                    ft.Text(r["restaurant"], size=14, weight=ft.FontWeight.BOLD),
-                    ft.Text(r["menu_name"], size=12, color=ft.Colors.BLACK54),
-                    ft.Text(r["comment"], size=13),
-                    ft.Text(r["time"], size=10, color=ft.Colors.BLACK45),
+                    ft.Text(
+                        r["restaurant_table"],
+                        size=14,
+                        weight=ft.FontWeight.BOLD,
+                        color=ft.Colors.BLACK87,
+                    ),
+                    ft.Row(
+                        [
+                            ft.Icon(
+                                ft.Icons.STAR if i < r["rating"] else ft.Icons.STAR_BORDER,
+                                color=BRAND_ORANGE,
+                                size=16,
+                            )
+                            for i in range(5)
+                        ]
+                    ),
+                    ft.Text(r["review_text"], size=13, color=ft.Colors.BLACK87),
                 ],
             ),
         )

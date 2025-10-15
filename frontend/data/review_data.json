@@ -80,6 +80,15 @@
       "stars": 3,
       "comment": "ดีมาก",
       "timestamp": "2025-10-15 03:04:08"
+    },
+    {
+      "restaurant": "Urban Street สเต็กถาดปราบเซียน",
+      "image": "http://127.0.0.1:5001/images/banner.png",
+      "is_eaten": true,
+      "is_reviewed": true,
+      "stars": 3,
+      "comment": "ผมเชื่อมได้ไหมน้าาา",
+      "timestamp": "2025-10-15 16:25:42"
     }
   ]
 }
