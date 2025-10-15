@@ -41,7 +41,10 @@ app = FastAPI(
 # -------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 images_path = os.path.join(BASE_DIR, "static", "images")
-app.mount("/images", StaticFiles(directory=images_path), name="images")
+
+# ✅ เช็กว่ามีโฟลเดอร์จริงก่อน mount (กัน error ตอน Render build)
+if os.path.exists(images_path):
+    app.mount("/images", StaticFiles(directory=images_path), name="images")
 
 # -------------------------------------------------------
 # 🔗 รวม Router ทั้งหมด
@@ -72,8 +75,11 @@ def home():
 
 
 # -------------------------------------------------------
-# 🚀 Entry Point
+# 🚀 Entry Point สำหรับ Render
 # -------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+    # ✅ ใช้ PORT จาก environment variable (Render จะกำหนดให้)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
