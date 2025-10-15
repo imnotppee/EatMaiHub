@@ -1,45 +1,25 @@
 import flet as ft
-import requests
+import json, os
 from functools import partial
 
-# ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-
-# ---------- โหลดข้อมูลรีวิวจาก API ----------
-def load_review():
-    try:
-        res = requests.get("http://127.0.0.1:5001/api/review")  # ✅ ดึงจาก Flask API
-        if res.status_code == 200:
-            rows = res.json()
-            review = [
-                {
-                    "restaurant": r["restaurant_name"],
-                    "menu_name": r["menu_name"],
-                    "stars": r["rating"],
-                    "comment": r["review_text"],
-                    "image": "photo/default.png",
-                    "is_eaten": True,
-                    "is_reviewed": True
-                }
-                for r in rows
-            ]
-            return {"review": review}
-        else:
-            print(f"⚠️ API Error: {res.status_code}")
-            return {"review": []}
-    except Exception as e:
-        print(f"❌ Network error: {e}")
-        return {"review": []}
+REVIEW_PATH = os.path.join(os.path.dirname(__file__), "data", "review_data.json")
 
 
-# ---------- ฟังก์ชันสร้างหน้ารีวิว ----------
+def load_reviews():
+    if os.path.exists(REVIEW_PATH):
+        with open(REVIEW_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {"reviews": []}
+
+
 def build_review_view(page: ft.Page) -> ft.View:
-    data = load_review()
-    review = data.get("review", [])
+    data = load_reviews()
+    reviews = data.get("reviews", [])
 
-    reviewed = [r for r in review if r.get("is_reviewed")]
-    pending = [r for r in review if r.get("is_eaten") and not r.get("is_reviewed")]
+    reviewed = [r for r in reviews if r.get("is_reviewed")]
+    pending = [r for r in reviews if r.get("is_eaten") and not r.get("is_reviewed")]
 
     # ---------- ฟังก์ชันเปลี่ยนหน้า ----------
     def go_to_restaurant(name, e):
@@ -72,7 +52,7 @@ def build_review_view(page: ft.Page) -> ft.View:
     # ---------- การ์ดรีวิวแล้ว ----------
     def reviewed_card(r):
         return ft.GestureDetector(
-            on_tap=partial(go_to_restaurant, r["restaurant"]),
+            on_tap=partial(go_to_restaurant, r["restaurant"]),  # ✅ คลิกทั้งการ์ดเพื่อไปหน้ารีวิว
             content=ft.Container(
                 padding=8,
                 margin=ft.margin.symmetric(vertical=5, horizontal=10),
@@ -155,7 +135,7 @@ def build_review_view(page: ft.Page) -> ft.View:
             ),
         )
 
-    # ---------- Header ----------
+    # ---------- Header (เพิ่ม Gradient ไล่สี) ----------
     header = ft.Container(
         gradient=ft.LinearGradient(
             begin=ft.alignment.top_center,

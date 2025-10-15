@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from database import engine, Base
-from component import auth_component
+from component import auth_component, review_component
 
 # ✅ สร้างตารางอัตโนมัติ
 Base.metadata.create_all(bind=engine)
@@ -10,6 +10,7 @@ app = FastAPI(title="EatMaiHub Backend API", version="1.0")
 
 # ✅ รวมทุก router
 app.include_router(auth_component.router)
+app.include_router(review_component.router)
 
 # ✅ root endpoint
 @app.get("/")
