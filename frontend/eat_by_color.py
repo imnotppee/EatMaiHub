@@ -1,18 +1,28 @@
 import flet as ft
-import json, os
+import requests  # ✅ เพิ่มบรรทัดนี้
+import os
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
 
+# ---------------- โหลดข้อมูลจาก Backend ----------------
 def load_color_data():
-    path = os.path.join(os.path.dirname(__file__), "data", "color_menus.json")
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        # ✅ เปลี่ยนจากอ่านไฟล์ JSON เป็นดึงข้อมูลจาก Flask Backend
+        res = requests.get("http://127.0.0.1:8000/api/color-menus")
+        if res.status_code == 200:
+            return res.json()
+        else:
+            print(f"❌ Error {res.status_code}: ไม่สามารถดึงข้อมูลจาก backend ได้")
+            return {}
+    except Exception as e:
+        print("❌ ไม่สามารถเชื่อมต่อ backend:", e)
+        return {}
 
 
 def build_color_view(page: ft.Page) -> ft.View:
-    color_data = load_color_data()
+    color_data = load_color_data()  # ✅ ตอนนี้จะมาจาก backend แล้ว
 
     # สีและชื่อวัน
     day_colors = [
@@ -83,7 +93,7 @@ def build_color_view(page: ft.Page) -> ft.View:
                         eng_day,
                         color=ft.Colors.WHITE,
                         rotate=ft.Rotate(angle=-1.5708),
-                        size=9,  # ✅ ลดขนาดฟอนต์ลง
+                        size=9,
                         text_align=ft.TextAlign.CENTER,
                         weight=ft.FontWeight.BOLD
                     ),
@@ -178,7 +188,7 @@ def build_color_view(page: ft.Page) -> ft.View:
         expand=True,
         controls=[
             ft.Text(
-                "กินตามสีวัน",  # ✅ ข้อความสั้นตามภาพ
+                "กินตามสีวัน",
                 size=16,
                 weight=ft.FontWeight.BOLD,
                 color=BRAND_ORANGE,
@@ -187,7 +197,7 @@ def build_color_view(page: ft.Page) -> ft.View:
             color_bar_section(),
             ft.Divider(),
             menu_container.current,
-            ft.Container(expand=True)  # ✅ ดัน bottom nav ไปล่างสุด
+            ft.Container(expand=True)
         ],
         scroll=ft.ScrollMode.AUTO,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER
@@ -208,7 +218,7 @@ def build_color_view(page: ft.Page) -> ft.View:
                     padding=ft.padding.symmetric(horizontal=12, vertical=10),
                     content=body
                 ),
-                bottom_nav,  # ✅ อยู่ล่างสุดแน่นอน
+                bottom_nav,
             ]
         ),
     )
