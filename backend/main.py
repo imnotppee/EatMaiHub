@@ -1,3 +1,4 @@
+# main.py
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import os
@@ -5,7 +6,7 @@ import os
 # ✅ Database & ORM
 from database import engine, Base, get_conn
 
-# ✅ โหลด Models ทั้งหมดให้ SQLAlchemy สร้างตาราง
+# ✅ โหลด Models ทั้งหมด (ให้ SQLAlchemy สร้างตาราง)
 from models import (
     User, Restaurant, Category, Menu,
     Review, History, Favorite, ZodiacRecommendation,
@@ -20,8 +21,9 @@ from component.sunbae_component import register_sunbae_routes
 from component.urban_street_component import register_urban_street_routes
 from component.favorite2_component import register_favorite_routes
 from component.review2_component import register_review_routes
+from component.horoscope_component import router as horoscope_router
 
-# ✅ Component อื่นจาก branch origin/main
+# ✅ Components อื่นจาก origin/main (ระบบ auth/otp/signup/login)
 from component import signup_component, login_component, forgotpass_component, otp_component
 
 # ✅ สร้างตารางอัตโนมัติ (เฉพาะครั้งแรก)
@@ -41,15 +43,22 @@ app = FastAPI(
 # -------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 images_path = os.path.join(BASE_DIR, "static", "images")
+
+# ✅ ตรวจสอบว่าโฟลเดอร์ static/images มีอยู่จริง
+if not os.path.exists(images_path):
+    os.makedirs(images_path, exist_ok=True)
+
+# ✅ Mount static path
 app.mount("/images", StaticFiles(directory=images_path), name="images")
 
 # -------------------------------------------------------
 # 🔗 รวม Router ทั้งหมด
 # -------------------------------------------------------
-# กลุ่มหลัก (มี auth)
+# 🌟 กลุ่มหลัก (FastAPI Router)
 app.include_router(auth_router)
+app.include_router(horoscope_router)
 
-# Components ที่ใช้ psycopg2
+# 🌈 Components ที่ใช้ psycopg2
 register_eat_by_color_routes(app, get_conn)
 register_highlight_routes(app, get_conn)
 register_sunbae_routes(app, get_conn)
@@ -57,7 +66,7 @@ register_urban_street_routes(app, get_conn)
 register_favorite_routes(app, get_conn)
 register_review_routes(app, get_conn)
 
-# Components จาก origin/main (auth/signup/login/otp)
+# 🔐 Components ระบบ auth เพิ่มเติม (signup/login/otp/forgot)
 app.include_router(signup_component.router)
 app.include_router(login_component.router)
 app.include_router(forgotpass_component.router)
@@ -69,7 +78,6 @@ app.include_router(otp_component.router)
 @app.get("/")
 def home():
     return {"message": "EatMaiHub Backend is running 🚀"}
-
 
 # -------------------------------------------------------
 # 🚀 Entry Point
