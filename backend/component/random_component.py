@@ -43,7 +43,7 @@ def get_random(db: Session = Depends(get_db)):
             for food in foods
         ]
 
-        return JSONResponse(content=jsonable_encoder(data))  # ✅ รองรับภาษาไทย
+        return JSONResponse(content=jsonable_encoder(data))  # รองรับภาษาไทย
 
     except Exception as e:
         print("❌ Database error:", e)

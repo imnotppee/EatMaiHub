@@ -8,7 +8,7 @@ PHONE_W, PHONE_H = 412, 917
 class FoodService:
     """โหลดข้อมูลอาหารจาก Backend"""
     API_URL = "http://127.0.0.1:8000/api/random"
-    BASE_IMAGE_URL = "http://127.0.0.1:8000"  
+    BASE_IMAGE_URL = "http://127.0.0.1:8000"
 
     @staticmethod
     def load_food_data():
@@ -37,7 +37,7 @@ class RandomFoodPage(ft.View):
 
         # --- State เริ่มต้น ---
         self.random_image = ft.Image(
-            src=f"{FoodService.BASE_IMAGE_URL}/static/photo/random1.jpg",
+            src=f"{FoodService.BASE_IMAGE_URL}/static/images/random1.png",
             border_radius=20,
             fit=ft.ImageFit.COVER
         )
@@ -204,7 +204,6 @@ class RandomFoodPage(ft.View):
             return
 
         total_rounds = 10
-
         for i in range(total_rounds):
             temp = random.choice(self.foods)
             self.random_image.src = f"{FoodService.BASE_IMAGE_URL}{temp['image']}"
@@ -228,9 +227,10 @@ class RandomFoodPage(ft.View):
             padding=20,
             shadow=ft.BoxShadow(blur_radius=25, color=ft.Colors.BLACK26),
             alignment=ft.alignment.center,
-            margin=ft.margin.only(top=80),
+            margin=ft.margin.only(top=100),  # ✅ ปรับจาก 80 → 100 ให้พอดีจอ
             content=ft.Column(
                 alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,  # จัดให้อยู่กลางแนวนอน
                 spacing=15,
                 controls=[
                     ft.Text("ผลการสุ่มอาหาร", size=18, weight="bold", color=BRAND_ORANGE),

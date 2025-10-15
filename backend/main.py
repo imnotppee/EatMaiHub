@@ -1,41 +1,38 @@
 from fastapi import FastAPI
-
-from fastapi.staticfiles import StaticFiles  # ✅ เพิ่มบรรทัดนี้
-from database import engine, Base
-from component import random_component
-
 from fastapi.staticfiles import StaticFiles
 import os
 
-
-# ✅ Database & ORM
+# Database & ORM
 from database import engine, Base, get_conn
 
-# ✅ โหลด Models ทั้งหมดให้ SQLAlchemy สร้างตาราง
+# โหลด Models ทั้งหมดให้ SQLAlchemy สร้างตาราง
 from models import (
     User, Restaurant, Category, Menu,
     Review, History, Favorite, ZodiacRecommendation,
     OTPCode
 )
 
-# ✅ Component Routes
-from component.auth_component import router as auth_router
-from component.eat_by_color import register_eat_by_color_routes
-from component.highlight_component import register_highlight_routes
-from component.sunbae_component import register_sunbae_routes
-from component.urban_street_component import register_urban_street_routes
-from component.favorite2_component import register_favorite_routes
-from component.review2_component import register_review_routes
+# ✅ Component Routers
+# from component.auth_component import router as auth_router
+from component.random_component import router as random_router
+# from component.eat_by_color import register_eat_by_color_routes
+# from component.highlight_component import register_highlight_routes
+# from component.sunbae_component import register_sunbae_routes
+# from component.urban_street_component import register_urban_street_routes
+# from component.favorite2_component import register_favorite_routes
+# from component.review2_component import register_review_routes
 
-# ✅ Component อื่นจาก branch origin/main
-from component import signup_component, login_component, forgotpass_component, otp_component
+# Components จาก origin/main (auth/signup/login/otp)
+# from component import signup_component, login_component, forgotpass_component, otp_component
 
-# ✅ สร้างตารางอัตโนมัติ (เฉพาะครั้งแรก)
+
+# Database init
+
 Base.metadata.create_all(bind=engine)
 
-# -------------------------------------------------------
-# ⚙️ สร้าง FastAPI Application
-# -------------------------------------------------------
+
+# FastAPI Application
+
 app = FastAPI(
     title="EatMaiHub Backend API",
     version="1.0",
@@ -43,57 +40,46 @@ app = FastAPI(
 )
 
 
-# ✅ Mount static files (ใช้เส้นทาง /static/photo/)
-# หมายเหตุ: ปรับ path ให้ตรงกับโครงสร้างโฟลเดอร์จริงของคุณ
-app.mount("/static", StaticFiles(directory="../frontend"), name="static")
+# เสิร์ฟรูปภาพจาก backend/static/images
 
-# ✅ รวม router ต่าง ๆ
-# app.include_router(auth_component.router)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# เสิร์ฟโฟลเดอร์ static ทั้งหมด (รวม images, .jpg, .jpeg, .webp)
+static_path = os.path.join(BASE_DIR, "static")
+images_path = os.path.join(static_path, "images")
+
+# mount static หลัก (รองรับ .jpg, .jpeg, .png, .webp)
+app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+# mount เฉพาะโฟลเดอร์ images เพิ่ม (เพื่อความเข้ากันได้กับโค้ดเก่า)
+app.mount("/images", StaticFiles(directory=images_path), name="images")
+
+
+# รวม Router ทั้งหมด
+
+# app.include_router(auth_router)
+app.include_router(random_router)
 # app.include_router(signup_component.router)
 # app.include_router(login_component.router)
 # app.include_router(forgotpass_component.router)
 # app.include_router(otp_component.router)
-app.include_router(random_component.router)
 
-# -------------------------------------------------------
-# 🖼️ เสิร์ฟรูปภาพจาก static/images
-# -------------------------------------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-images_path = os.path.join(BASE_DIR, "static", "images")
-app.mount("/images", StaticFiles(directory=images_path), name="images")
+# Components ที่ใช้ psycopg2 (ผ่าน get_conn)
+# register_eat_by_color_routes(app, get_conn)
+# register_highlight_routes(app, get_conn)
+# register_sunbae_routes(app, get_conn)
+# register_urban_street_routes(app, get_conn)
+# register_favorite_routes(app, get_conn)
+# register_review_routes(app, get_conn)
 
-# -------------------------------------------------------
-# 🔗 รวม Router ทั้งหมด
-# -------------------------------------------------------
-# กลุ่มหลัก (มี auth)
-app.include_router(auth_router)
 
-# Components ที่ใช้ psycopg2
-register_eat_by_color_routes(app, get_conn)
-register_highlight_routes(app, get_conn)
-register_sunbae_routes(app, get_conn)
-register_urban_street_routes(app, get_conn)
-register_favorite_routes(app, get_conn)
-register_review_routes(app, get_conn)
-
-# Components จาก origin/main (auth/signup/login/otp)
-app.include_router(signup_component.router)
-app.include_router(login_component.router)
-app.include_router(forgotpass_component.router)
-app.include_router(otp_component.router)
->>>>>>> origin/main
-
-# -------------------------------------------------------
-# 🏠 Root Endpoint
-# -------------------------------------------------------
+# Root Endpoint
 @app.get("/")
 def home():
     return {"message": "EatMaiHub Backend is running 🚀"}
 
 
-# -------------------------------------------------------
-# 🚀 Entry Point
-# -------------------------------------------------------
+# Entry Point
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
