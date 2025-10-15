@@ -9,7 +9,7 @@ PHONE_W, PHONE_H = 412, 917
 
 def build_horoscope_view(page: ft.Page) -> ft.View:
     # ---------- โหลดข้อมูลจาก API ----------
-    API_URL = "http://127.0.0.1:5001/api/horoscope"  # ✅ ถ้า backend อยู่เครื่องเดียวกัน
+    API_URL = "http://127.0.0.1:8000/api/horoscope"  # ✅ ถ้า backend อยู่เครื่องเดียวกัน
     # ถ้ารัน backend บนเครื่องอื่น เช่น IP 10.117.10.236 ให้ใช้:
     # API_URL = "http://10.117.10.236:5001/api/horoscope"
 
