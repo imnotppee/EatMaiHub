@@ -15,3 +15,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # ✅ Base สำหรับใช้สร้าง model
 Base = declarative_base()
+
+# ✅ ฟังก์ชัน get_db สำหรับใช้กับ Depends()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
