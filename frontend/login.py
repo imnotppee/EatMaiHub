@@ -1,15 +1,18 @@
 import flet as ft
 from flet import Icons, Colors
+import requests
 
+# ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
 BRAND_BROWN  = "#4D2E1E"
 PHONE_W, PHONE_H = 412, 917
+API_BASE = "http://localhost:8000"
 
+# ---------- Header ----------
 def curved_orange_header():
-    # หัวส้ม + วงรีขาว 413x103 (สไตล์ Figma)
-    ORANGE_H    = 150
-    ELLIPSE_W   = 413
-    ELLIPSE_H   = 103
+    ORANGE_H = 150
+    ELLIPSE_W = 413
+    ELLIPSE_H = 103
     ELLIPSE_TOP = 110
     ELLIPSE_LEFT = -1
 
@@ -18,17 +21,12 @@ def curved_orange_header():
         height=ORANGE_H + 60,
         controls=[
             ft.Container(width=PHONE_W, height=ORANGE_H, bgcolor=BRAND_ORANGE),
-            ft.Container(
-                width=ELLIPSE_W,
-                height=ELLIPSE_H,
-                bgcolor=Colors.WHITE,
-                border_radius=ELLIPSE_H // 2,
-                top=ELLIPSE_TOP,
-                left=ELLIPSE_LEFT,
-            ),
+            ft.Container(width=ELLIPSE_W, height=ELLIPSE_H, bgcolor=Colors.WHITE,
+                         border_radius=ELLIPSE_H // 2, top=ELLIPSE_TOP, left=ELLIPSE_LEFT),
         ],
     )
 
+# ---------- Frame ----------
 def phone_frame(*children: ft.Control):
     return ft.Container(
         width=PHONE_W,
@@ -37,19 +35,32 @@ def phone_frame(*children: ft.Control):
         content=ft.Column(controls=list(children), spacing=0),
     )
 
+# ---------- View ----------
 def build_login_view(page: ft.Page) -> ft.View:
-    username = ft.TextField(label="Username", width=340, border_color=BRAND_ORANGE)
+    email = ft.TextField(label="Email", width=340, border_color=BRAND_ORANGE)
     password = ft.TextField(label="Password", width=340, password=True, can_reveal_password=True, border_color=BRAND_ORANGE)
 
+    # ✅ ฟังก์ชันล็อกอินจริง
     def on_login(e):
-        page.go("/home")
-        page.snack_bar = ft.SnackBar(ft.Text("Logged in (mock)"))
-        page.snack_bar.open = True
+        data = {"email": email.value, "password": password.value}
+        try:
+            res = requests.post(f"{API_BASE}/auth/login", json=data)
+            if res.status_code == 200:
+                info = res.json()
+                page.snack_bar = ft.SnackBar(ft.Text(f"✅ {info['message']}"))
+                page.snack_bar.open = True
+                page.go("/home")
+            else:
+                msg = res.json().get("detail", "Login failed")
+                page.snack_bar = ft.SnackBar(ft.Text(f"❌ {msg}"))
+                page.snack_bar.open = True
+        except Exception as err:
+            page.snack_bar = ft.SnackBar(ft.Text(f"⚠️ Connection error: {err}"))
+            page.snack_bar.open = True
         page.update()
 
     def goto_signup(e): page.go("/signup")
-    def goto_forgot(e): page.go("/reset")  # ไปหน้า reset ก่อน
-
+    def goto_forgot(e): page.go("/reset")
     def google_login(e):
         page.snack_bar = ft.SnackBar(ft.Text("TODO: Google Sign-In"))
         page.snack_bar.open = True
@@ -64,16 +75,7 @@ def build_login_view(page: ft.Page) -> ft.View:
             controls=[
                 logo,
                 ft.Container(height=8),
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    controls=[
-                        ft.Icon(Icons.STAR_ROUNDED, size=20, color=BRAND_ORANGE),
-                        ft.Icon(Icons.STAR_ROUNDED, size=20, color=BRAND_ORANGE),
-                        ft.Icon(Icons.STAR_ROUNDED, size=20, color=BRAND_ORANGE),
-                    ],
-                ),
-                ft.Container(height=18),
-                username,
+                email,
                 ft.Container(height=12),
                 password,
                 ft.Container(height=8),
@@ -82,7 +84,6 @@ def build_login_view(page: ft.Page) -> ft.View:
                     width=340,
                     content=ft.TextButton("Forgot your password?", on_click=goto_forgot),
                 ),
-                ft.Container(height=4),
                 ft.ElevatedButton(
                     text="Login",
                     on_click=on_login,
@@ -92,11 +93,8 @@ def build_login_view(page: ft.Page) -> ft.View:
                     style=ft.ButtonStyle(shape={"": ft.RoundedRectangleBorder(radius=28)}),
                 ),
                 ft.Container(height=6),
-                ft.TextButton(
-                    "Create account", on_click=goto_signup,
-                    style=ft.ButtonStyle(text_style=ft.TextStyle(size=16, weight=ft.FontWeight.W_700)),
-                ),
-                ft.Container(height=8),
+                ft.TextButton("Create account", on_click=goto_signup),
+                ft.Container(height=12),
                 ft.Row(
                     width=340,
                     alignment=ft.MainAxisAlignment.CENTER,
@@ -112,7 +110,6 @@ def build_login_view(page: ft.Page) -> ft.View:
                     mouse_cursor=ft.MouseCursor.CLICK,
                     content=ft.Image(src="google.png", width=36, height=36, fit=ft.ImageFit.CONTAIN),
                 ),
-                ft.Container(height=24),
             ],
         ),
     )
@@ -123,15 +120,14 @@ def build_login_view(page: ft.Page) -> ft.View:
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         vertical_alignment=ft.MainAxisAlignment.CENTER,
         controls=[
-            # พื้นหลังนอกกรอบ = ดำ
             ft.Container(
                 expand=True,
                 bgcolor=ft.Colors.BLACK,
                 alignment=ft.alignment.center,
                 content=ft.Container(
-                    width=412,
-                    height=917,
-                    bgcolor=ft.Colors.WHITE,   # กรอบมือถือ = ขาว
+                    width=PHONE_W,
+                    height=PHONE_H,
+                    bgcolor=ft.Colors.WHITE,
                     content=content,
                 ),
             )
