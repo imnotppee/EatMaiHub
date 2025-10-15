@@ -43,6 +43,12 @@ app = FastAPI(
 # -------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 images_path = os.path.join(BASE_DIR, "static", "images")
+
+# ✅ ตรวจสอบว่าโฟลเดอร์ static/images มีอยู่จริง
+if not os.path.exists(images_path):
+    os.makedirs(images_path, exist_ok=True)
+
+# ✅ Mount static path
 app.mount("/images", StaticFiles(directory=images_path), name="images")
 
 # -------------------------------------------------------
