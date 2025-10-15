@@ -1,52 +1,24 @@
 import flet as ft
-import json
-import os
-from flet import Colors
+import requests
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-FAV_PATH = os.path.join(os.path.dirname(__file__), "data", "favorite.json")
-
-
-# ---------- โหลด / บันทึก Favorites ----------
-def load_favorites():
-    if os.path.exists(FAV_PATH):
-        with open(FAV_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
-
-
-def save_favorites(favorites):
-    os.makedirs(os.path.dirname(FAV_PATH), exist_ok=True)
-    with open(FAV_PATH, "w", encoding="utf-8") as f:
-        json.dump(favorites, f, ensure_ascii=False, indent=2)
-
-
-# ---------- โหลด JSON ----------
-def load_data(filename: str):
-    path = os.path.join(os.path.dirname(__file__), "data", filename)
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+API_URL = "http://127.0.0.1:5002/api/restaurants"
 
 
 def categories_view(page: ft.Page) -> ft.View:
-    current_category = "อาหารไทย"
-    data_map = {
-        "อาหารไทย": ("thai_food.json", "thai_foods"),
-        "อาหารญี่ปุ่น": ("japan_food.json", "japan_foods"),
-        "อาหารฟาสต์ฟู้ด": ("fast_food.json", "fast_foods"),
-    }
-
-    data = load_data(data_map[current_category][0])
-    foods = data.get(data_map[current_category][1], [])
-    favorites = load_favorites()
+    current_category = "อาหารไทย"  # หมวดเริ่มต้น
 
     # ---------- Header ----------
     header_row = ft.Row(
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         controls=[
-            ft.IconButton(icon=ft.Icons.ARROW_BACK, icon_color=ft.Colors.WHITE, on_click=lambda e: page.go("/home")),
-            ft.Image(src="logo.png", width=36, height=36),
+            ft.IconButton(
+                icon=ft.Icons.ARROW_BACK,
+                icon_color=ft.Colors.WHITE,
+                on_click=lambda e: page.go("/home"),
+            ),
+            ft.Image(src="logo.png", width=80, height=36),
             ft.IconButton(icon=ft.Icons.PERSON, icon_color=ft.Colors.WHITE),
         ],
     )
@@ -66,107 +38,77 @@ def categories_view(page: ft.Page) -> ft.View:
         content=ft.Column(spacing=12, controls=[header_row, search]),
     )
 
-    # ---------- การ์ดร้านอาหาร + หัวใจ Favorite ----------
+    # ---------- สร้างการ์ดร้านอาหาร ----------
     def build_food_list(food_items):
+        if not food_items:
+            return [
+                ft.Container(
+                    padding=20,
+                    alignment=ft.alignment.center,
+                    content=ft.Text(
+                        "ไม่พบร้านอาหารในหมวดนี้",
+                        color=ft.Colors.RED,
+                        size=14,
+                        weight="bold",
+                    ),
+                )
+            ]
+
         cards = []
-
         for f in food_items:
-            is_fav = any(
-                fav.get("title") == f["name"] or fav.get("name") == f["name"]
-                for fav in favorites
-            )
-
-            heart_icon = ft.IconButton(
-                icon=ft.Icons.FAVORITE if is_fav else ft.Icons.FAVORITE_BORDER,
-                icon_color=BRAND_ORANGE,
-                icon_size=24,
-            )
-
-            def toggle_favorite(e, food=f, heart=heart_icon):
-                current_favorites = load_favorites()
-                if any(fav.get("title") == food["name"] or fav.get("name") == food["name"] for fav in current_favorites):
-                    # ❌ ลบออกจาก favorite
-                    current_favorites = [fav for fav in current_favorites if fav.get("title") != food["name"]]
-                    heart.icon = ft.Icons.FAVORITE_BORDER
-                else:
-                    # ✅ เพิ่มเข้า favorite
-                    current_favorites.append(
-                        {
-                            "title": food["name"],
-                            "category": current_category,
-                            "image": f"assets/{food['image']}",
-                            "rating": food.get("rating", ""),
-                            "address": food.get("address", ""),
-                        }
-                    )
-                    heart.icon = ft.Icons.FAVORITE
-                save_favorites(current_favorites)
-                heart.update()
-
-            heart_icon.on_click = toggle_favorite
-
+            if f.get("category_name") != current_category:
+                continue
             card = ft.Container(
                 bgcolor=ft.Colors.WHITE,
                 border_radius=22,
-                padding=18,
-                margin=ft.margin.symmetric(vertical=10, horizontal=8),
+                padding=12,
+                margin=ft.margin.symmetric(vertical=8, horizontal=8),
                 shadow=ft.BoxShadow(
-                    blur_radius=15,
+                    blur_radius=10,
                     spread_radius=1,
                     color=ft.Colors.with_opacity(0.15, ft.Colors.BLACK),
                 ),
-                height=140,
                 content=ft.Row(
                     spacing=14,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     controls=[
                         ft.Container(
-                            width=100,
+                            width=110,
                             height=100,
                             border_radius=12,
                             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
                             content=ft.Image(
-                                src=f"assets/{f['image']}",
+                                src=f.get("image_url", "default.png"),
                                 fit=ft.ImageFit.COVER,
                             ),
                         ),
                         ft.Column(
-                            alignment=ft.MainAxisAlignment.CENTER,
-                            horizontal_alignment=ft.CrossAxisAlignment.START,
-                            spacing=6,
+                            alignment=ft.MainAxisAlignment.START,
+                            spacing=4,
                             expand=True,
                             controls=[
-                                ft.Row(
-                                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                                    controls=[
-                                        ft.Text(
-                                            f"ชื่อร้าน : {f['name']}",
-                                            size=14,                # ✅ ฟอนต์เล็กลง
-                                            weight="bold",
-                                            color=ft.Colors.BLACK87,
-                                            max_lines=1,            # ✅ บรรทัดเดียว
-                                            overflow="ellipsis",    # ✅ ถ้ายาวจะมี ...
-                                            width=180,              # ✅ จำกัดความกว้าง
-                                        ),
-                                        heart_icon,
-                                    ],
+                                ft.Text(
+                                    f"ชื่อร้าน : {f.get('name', '-')}",
+                                    size=14,
+                                    weight="bold",
+                                    color=ft.Colors.BLACK87,
                                 ),
-                                ft.Row(
-                                    spacing=5,
-                                    controls=[
-                                        ft.Icon(name=ft.Icons.STAR_ROUNDED, color=BRAND_ORANGE, size=18),
-                                        ft.Text(f"รีวิว : {f['rating']} ดาว", size=13, color=BRAND_ORANGE),
-                                    ],
+                                ft.Text(
+                                    f"รีวิว : 4.{f.get('id', 0)} ดาว",
+                                    size=12,
+                                    color=ft.Colors.BLACK87,
                                 ),
-                                ft.Row(
-                                    spacing=5,
-                                    controls=[
-                                        ft.Icon(name=ft.Icons.LOCATION_ON_ROUNDED, color="#FF6F61", size=18),
-                                        ft.Text(f"ที่อยู่ : {f['address']}", size=12, color=ft.Colors.BLACK54),
-                                    ],
+                                ft.Text(
+                                    f"ที่อยู่ : {f.get('location', '-')}",
+                                    size=12,
+                                    color=ft.Colors.BLACK54,
                                 ),
                             ],
+                        ),
+                        ft.IconButton(
+                            icon=ft.Icons.FAVORITE_BORDER,
+                            icon_color=BRAND_ORANGE,
+                            icon_size=24,
                         ),
                     ],
                 ),
@@ -174,30 +116,35 @@ def categories_view(page: ft.Page) -> ft.View:
             cards.append(card)
         return cards
 
-    food_list_column = ft.Column(spacing=12, scroll=ft.ScrollMode.AUTO, expand=True, controls=build_food_list(foods))
+    # ---------- แสดงรายการร้าน ----------
+    food_list_column = ft.Column(spacing=12, scroll=ft.ScrollMode.AUTO, expand=True)
 
-    # ---------- เปลี่ยนหมวด ----------
-    def change_category(e):
+    # ---------- โหลดข้อมูลจาก backend ----------
+    def load_restaurants(category):
         nonlocal current_category
-        current_category = e.control.data
-        json_file, key = data_map[current_category]
-        new_data = load_data(json_file)
-        new_foods = new_data.get(key, [])
+        current_category = category
+        try:
+            res = requests.get(API_URL)
+            res.raise_for_status()
+            data = res.json()
+        except Exception as ex:
+            print("Error fetching data:", ex)
+            data = []
+
         food_list_column.controls.clear()
-        for c in build_food_list(new_foods):
-            food_list_column.controls.append(c)
-        title.value = f"ร้านอาหาร - {current_category}"
+        food_list_column.controls.extend(build_food_list(data))
+        title.value = category
         for btn in category_buttons.controls:
-            label = btn.content.controls[1]
-            label.color = BRAND_ORANGE if btn.data == current_category else ft.Colors.BLACK87
-            label.weight = "bold" if btn.data == current_category else "normal"
+            btn.content.controls[1].color = (
+                BRAND_ORANGE if btn.data == category else ft.Colors.BLACK87
+            )
         page.update()
 
     # ---------- ปุ่มหมวด ----------
     def category_card(img: str, label: str, active=False):
         return ft.GestureDetector(
             data=label,
-            on_tap=change_category,
+            on_tap=lambda e: load_restaurants(label),
             content=ft.Column(
                 [
                     ft.Container(
@@ -207,7 +154,12 @@ def categories_view(page: ft.Page) -> ft.View:
                         border_radius=12,
                         shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.BLACK12),
                         alignment=ft.alignment.center,
-                        content=ft.Image(src=img, width=48, height=48, fit=ft.ImageFit.CONTAIN),
+                        content=ft.Image(
+                            src=img,
+                            width=48,
+                            height=48,
+                            fit=ft.ImageFit.CONTAIN,
+                        ),
                     ),
                     ft.Text(
                         label,
@@ -230,39 +182,61 @@ def categories_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- Bottom nav ----------
+    # ---------- Bottom Navigation ----------
+    def update_active_nav(selected_label):
+        """อัปเดตให้เฉพาะปุ่มที่เลือกเป็นสีส้ม"""
+        for item in bottom_nav_row.controls:
+            icon, text = item.content.controls
+            text.color = BRAND_ORANGE if text.value == selected_label else ft.Colors.BLACK87
+        page.update()
+
     def nav_item(icon: str, label: str, route=None, active=False):
         return ft.GestureDetector(
-            on_tap=lambda e: page.go(route) if route else None,
+            on_tap=lambda e: (
+                update_active_nav(label),
+                page.go(route) if route else None
+            ),
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=2,
                 controls=[
                     ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
-                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
+                    ft.Text(
+                        label,
+                        size=10,
+                        color=BRAND_ORANGE if active else ft.Colors.BLACK87,
+                    ),
                 ],
             ),
         )
 
-    bottom_nav = ft.Container(
-        bgcolor=Colors.WHITE,
-        border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
-        padding=10,
-        height=65,
-        content=ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_AROUND,
-            controls=[
-                nav_item("home.png", "Home", route="/home"),
-                nav_item("heart.png", "Favorite", route="/favorite"),
-                nav_item("review.png", "Review"),
-                nav_item("more.png", "More"),
-            ],
-        ),
+    bottom_nav_row = ft.Row(
+        alignment=ft.MainAxisAlignment.SPACE_AROUND,
+        controls=[
+            nav_item("home.png", "Home", route="/home", active=True),
+            nav_item("history.png", "History", route="/history"),
+            nav_item("review.png", "Review", route="/review"),
+            nav_item("menu.png", "More", route="/more"),
+        ],
     )
 
-    title = ft.Text("ร้านอาหาร - อาหารไทย", size=18, weight="bold", color=BRAND_ORANGE)
+    bottom_nav = ft.Container(
+        bgcolor=ft.Colors.WHITE,
+        border=ft.border.only(top=ft.BorderSide(1, ft.Colors.BLACK12)),
+        padding=10,
+        height=65,
+        content=bottom_nav_row,
+    )
 
-    # ---------- Body ----------
+    # ---------- Title ----------
+    title = ft.Text(
+        current_category,
+        size=18,
+        weight="bold",
+        color=BRAND_ORANGE,
+    )
+
+    # ---------- Scroll Area ----------
     scrollable_area = ft.Column(
         spacing=16,
         expand=True,
@@ -275,7 +249,7 @@ def categories_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- พื้นหลังไล่สี ----------
+    # ---------- Background ----------
     orange_gradient_bg = ft.Container(
         width=PHONE_W,
         height=340,
@@ -287,6 +261,7 @@ def categories_view(page: ft.Page) -> ft.View:
         ),
     )
 
+    # ---------- Phone Frame ----------
     phone_frame = ft.Stack(
         width=PHONE_W,
         height=PHONE_H,
@@ -306,6 +281,11 @@ def categories_view(page: ft.Page) -> ft.View:
         ],
     )
 
+    # ---------- โหลดค่าเริ่มต้น ----------
+    page.add(ft.Container())
+    load_restaurants(current_category)
+
+    # ---------- Return View ----------
     return ft.View(
         route="/categories",
         padding=0,

@@ -5,22 +5,7 @@ __pycache__/
 *.pyd
 *.log
 *.pid
-*.tmp
-*.bak
-*.swp
 
-# Virtual environment
-venv/
-.venv/
-env/
-ENV/
-
-# Environment files
-.env
-.env.*
-*.env
-
-# === Database / Data files ===
 *.sql
 *.dump
 *.backup
