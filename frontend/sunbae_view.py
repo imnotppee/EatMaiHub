@@ -1,67 +1,35 @@
 import flet as ft
-import json, os, datetime
+import requests
+import datetime
 
-# ---------- ค่าคงที่ ----------
+# ---------- CONFIG ----------
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
-# ---------- path ----------
-FAV_PATH = os.path.join(os.path.dirname(__file__), "data", "favorite.json")
-REVIEW_PATH = os.path.join(os.path.dirname(__file__), "data", "review_data.json")
+# ---------- API URL ----------
+API_FAVORITE = "http://127.0.0.1:5001/api/favorites"
+API_REVIEW = "http://127.0.0.1:5001/api/reviews"
+API_SUNBAE = "http://127.0.0.1:5001/api/sunbae"
+ 
 
-# ---------- โหลด / บันทึก ----------
-def load_json(path, default):
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return default
-
-def save_json(path, data):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-def load_reviews():
-    return load_json(REVIEW_PATH, {"reviews": []})
-
-def save_reviews(data):
-    save_json(REVIEW_PATH, data)
-
-
+# ---------- VIEW ----------
 def build_sunbae_view(page: ft.Page) -> ft.View:
-    # ---------- โหลดข้อมูลร้าน ----------
-    data_path = os.path.join(os.path.dirname(__file__), "data", "sunbae_data.json")
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    # ---------- โหลดข้อมูลร้านจาก Backend ----------
+    try:
+        res = requests.get(API_SUNBAE, timeout=5)
+        res.raise_for_status()
+        data = res.json()
+    except Exception as e:
+        print("❌ โหลดข้อมูลร้าน Sunbae ไม่สำเร็จ:", e)
+        data = {
+            "name": "Sunbae Korean Restaurant",
+            "banner": ["default.png"],
+            "menus": []
+        }
 
-    favorites = load_json(FAV_PATH, [])
-    reviews_data = load_reviews()
     restaurant_name = data.get("name", "Sunbae")
-    banner_img = data.get("banner", [""])[0] if data.get("banner") else ""
-
-    # ---------- ตรวจ favorite ----------
-    def is_favorite():
-        return any(f["title"] == restaurant_name for f in favorites)
-
-    def toggle_favorite(e):
-        nonlocal favorites
-        if is_favorite():
-            favorites = [f for f in favorites if f["title"] != restaurant_name]
-            heart_icon.icon = ft.Icons.FAVORITE_BORDER
-            heart_icon.icon_color = ft.Colors.GREY
-            msg = "ลบออกจากรายการโปรดแล้ว"
-        else:
-            favorites.append({
-                "title": restaurant_name,
-                "image": banner_img
-            })
-            heart_icon.icon = ft.Icons.FAVORITE
-            heart_icon.icon_color = BRAND_ORANGE
-            msg = "เพิ่มในรายการโปรดแล้ว"
-        save_json(FAV_PATH, favorites)
-        page.snack_bar = ft.SnackBar(ft.Text(msg), bgcolor=BRAND_ORANGE)
-        page.snack_bar.open = True
-        page.update()
+    banner_img = data.get("banner", [""])[0]
+    menus = data.get("menus", [])
 
     # ---------- Header ----------
     header = ft.Container(
@@ -87,7 +55,38 @@ def build_sunbae_view(page: ft.Page) -> ft.View:
         ),
     )
 
-    # ---------- การ์ดเมนู ----------
+    # ---------- ปุ่มหัวใจ (Favorite) ----------
+    is_favorite = [False]  # ใช้ list เพื่อแก้ไขค่าภายในได้
+
+    def toggle_favorite(e):
+        try:
+            if not is_favorite[0]:
+                payload = {"user_id": 1, "restaurant_id": 2}  # 🧩 restaurant_id = id ของ Sunbae
+                requests.post(API_FAVORITE, json=payload, timeout=3)
+                is_favorite[0] = True
+                heart_icon.icon = ft.Icons.FAVORITE
+                heart_icon.icon_color = BRAND_ORANGE
+                msg = "เพิ่มในรายการโปรดแล้ว"
+            else:
+                requests.delete(f"{API_FAVORITE}/2")  # 🧩 restaurant_id = 2
+                is_favorite[0] = False
+                heart_icon.icon = ft.Icons.FAVORITE_BORDER
+                heart_icon.icon_color = ft.Colors.GREY
+                msg = "ลบออกจากรายการโปรดแล้ว"
+            page.snack_bar = ft.SnackBar(ft.Text(msg), bgcolor=BRAND_ORANGE)
+            page.snack_bar.open = True
+            page.update()
+        except Exception as err:
+            print("❌ Favorite error:", err)
+
+    heart_icon = ft.IconButton(
+        icon=ft.Icons.FAVORITE_BORDER,
+        icon_color=ft.Colors.GREY,
+        icon_size=24,
+        on_click=toggle_favorite,
+    )
+
+    # ---------- เมนู ----------
     def menu_card(item):
         return ft.Container(
             width=(PHONE_W - 64) / 2,
@@ -110,66 +109,43 @@ def build_sunbae_view(page: ft.Page) -> ft.View:
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=16,
         run_spacing=16,
-        controls=[menu_card(m) for m in data.get("menus", [])],
+        controls=[menu_card(m) for m in menus],
     )
 
     # ---------- ปุ่ม “กินแล้ว” ----------
-    review_entry = {"is_eaten": False}
-
-    def show_review_choice_dialog():
-        def review_now(e):
-            page.dialog.open = False
-            page.update()
-            page.go("/review")
-
-        def skip_review(e):
-            page.dialog.open = False
-            page.update()
-
-            reviews_data["reviews"].append({
-                "restaurant": restaurant_name,
-                "image": banner_img,
-                "is_eaten": True,
-                "is_reviewed": False,
-                "stars": 0,
-                "comment": "",
-                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            })
-            save_reviews(reviews_data)
-            page.snack_bar = ft.SnackBar(ft.Text("บันทึกว่า 'กินแล้วแต่ยังไม่รีวิว'"), bgcolor=BRAND_ORANGE)
-            page.snack_bar.open = True
-            page.update()
-
-        page.dialog = ft.AlertDialog(
-            modal=True,
-            title=ft.Text("รีวิวไหม?", weight=ft.FontWeight.BOLD),
-            content=ft.Text("คุณต้องการรีวิวร้านนี้ตอนนี้เลยไหม?"),
-            actions=[
-                ft.TextButton("รีวิวเลย", on_click=review_now),
-                ft.TextButton("ยังไม่รีวิว", on_click=skip_review),
-            ],
-            actions_alignment=ft.MainAxisAlignment.END,
-        )
-        page.dialog.open = True
-        page.update()
+    is_eaten = [False]
 
     def toggle_eaten(e):
-        review_entry["is_eaten"] = not review_entry["is_eaten"]
+        is_eaten[0] = not is_eaten[0]
         update_eat_button()
-        if review_entry["is_eaten"]:
-            show_review_choice_dialog()
+        if is_eaten[0]:
+            show_review_dialog()
         else:
             page.snack_bar = ft.SnackBar(ft.Text("ยกเลิกสถานะ 'กินแล้ว'"), bgcolor=BRAND_ORANGE)
             page.snack_bar.open = True
             page.update()
 
     def update_eat_button():
-        if review_entry["is_eaten"]:
+        if is_eaten[0]:
             eat_btn.text = "กินแล้ว"
             eat_btn.bgcolor = BRAND_ORANGE
         else:
             eat_btn.text = "ยังไม่ได้กิน"
             eat_btn.bgcolor = ft.Colors.GREY_400
+        page.update()
+
+    def show_review_dialog():
+        page.dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("รีวิวไหม?", weight=ft.FontWeight.BOLD),
+            content=ft.Text("คุณต้องการรีวิวร้านนี้ตอนนี้เลยไหม?"),
+            actions=[
+                ft.TextButton("รีวิวเลย", on_click=lambda e: page.dialog.close(), data="review"),
+                ft.TextButton("ยังไม่รีวิว", on_click=lambda e: page.dialog.close(), data="skip"),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        page.dialog.open = True
         page.update()
 
     eat_btn = ft.ElevatedButton(
@@ -182,25 +158,24 @@ def build_sunbae_view(page: ft.Page) -> ft.View:
         on_click=toggle_eaten,
     )
 
-    # ---------- ให้คะแนน ----------
-    selected_stars = 0
-    stars = []
+    # ---------- ระบบรีวิว ----------
+    selected_stars = [0]
 
     def update_stars(index):
-        nonlocal selected_stars
-        selected_stars = index + 1
+        selected_stars[0] = index + 1
         for i, s in enumerate(stars):
-            s.icon = ft.Icons.STAR if i < selected_stars else ft.Icons.STAR_BORDER
+            s.icon = ft.Icons.STAR if i < selected_stars[0] else ft.Icons.STAR_BORDER
         page.update()
 
-    for i in range(5):
-        star = ft.IconButton(
+    stars = [
+        ft.IconButton(
             icon=ft.Icons.STAR_BORDER,
             icon_color=BRAND_ORANGE,
             icon_size=36,
             on_click=lambda e, i=i: update_stars(i),
         )
-        stars.append(star)
+        for i in range(5)
+    ]
 
     review_field = ft.TextField(
         hint_text="เขียนรีวิว...",
@@ -213,40 +188,42 @@ def build_sunbae_view(page: ft.Page) -> ft.View:
     )
 
     def send_review(e):
-        nonlocal selected_stars
-        if not review_entry["is_eaten"]:
+        if not is_eaten[0]:
             page.snack_bar = ft.SnackBar(ft.Text("กรุณากด 'กินแล้ว' ก่อนรีวิว"), bgcolor="red")
             page.snack_bar.open = True
             page.update()
             return
-        if selected_stars == 0 or not review_field.value.strip():
+        if selected_stars[0] == 0 or not review_field.value.strip():
             page.snack_bar = ft.SnackBar(ft.Text("กรุณาให้คะแนนและเขียนรีวิวก่อนส่ง"), bgcolor="red")
             page.snack_bar.open = True
             page.update()
             return
 
-        new_review = {
-            "restaurant": restaurant_name,
-            "image": banner_img,
-            "is_eaten": True,
-            "is_reviewed": True,
-            "stars": selected_stars,
+        payload = {
+            "restaurant_name": restaurant_name,
+            "menu_name": "",
+            "stars": selected_stars[0],
             "comment": review_field.value.strip(),
-            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "user_id": 1,
+            "restaurant_table": "sunbae"
         }
-        reviews_data["reviews"].append(new_review)
-        save_reviews(reviews_data)
+
+        try:
+            res = requests.post(API_REVIEW, json=payload, timeout=5)
+            res.raise_for_status()
+            page.snack_bar = ft.SnackBar(ft.Text("ส่งรีวิวสำเร็จ!"), bgcolor="green")
+        except Exception as err:
+            print("❌ ส่งรีวิวไม่สำเร็จ:", err)
+            page.snack_bar = ft.SnackBar(ft.Text("เกิดข้อผิดพลาดในการส่งรีวิว"), bgcolor="red")
+        page.snack_bar.open = True
+        page.update()
 
         review_field.value = ""
         for s in stars:
             s.icon = ft.Icons.STAR_BORDER
-        selected_stars = 0
-
-        page.snack_bar = ft.SnackBar(ft.Text("ส่งรีวิวสำเร็จ!"), bgcolor="green")
-        page.snack_bar.open = True
+        selected_stars[0] = 0
         page.update()
 
-    # ---------- ส่วนรีวิว ----------
     review_section = ft.Column(
         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         controls=[
@@ -266,14 +243,6 @@ def build_sunbae_view(page: ft.Page) -> ft.View:
                 on_click=send_review,
             ),
         ],
-    )
-
-    # ---------- ปุ่มหัวใจ ----------
-    heart_icon = ft.IconButton(
-        icon=ft.Icons.FAVORITE if is_favorite() else ft.Icons.FAVORITE_BORDER,
-        icon_color=BRAND_ORANGE if is_favorite() else ft.Colors.GREY,
-        icon_size=24,
-        on_click=toggle_favorite,
     )
 
     # ---------- Layout ----------
