@@ -2,7 +2,6 @@ from sqlalchemy import Column, Integer, String, Text, Boolean, DECIMAL, ForeignK
 from sqlalchemy.orm import relationship
 from database import Base
 
-
 # ========================= USERS =========================
 class User(Base):
     __tablename__ = "users"
@@ -17,7 +16,7 @@ class User(Base):
     reviews = relationship("Review", back_populates="user")
     favorites = relationship("Favorite", back_populates="user")
     history = relationship("History", back_populates="user")
-    otp_codes = relationship("OTPCode", back_populates="user", cascade="all, delete-orphan")  # ✅ เพิ่ม OTP
+    otp_codes = relationship("OTPCode", back_populates="user", cascade="all, delete-orphan")
 
 
 # ========================= RESTAURANTS =========================
@@ -117,6 +116,14 @@ class Favorite(Base):
     user = relationship("User", back_populates="favorites")
     restaurant = relationship("Restaurant", back_populates="favorites")
 
+
+class Random(Base):
+    __tablename__ = "random"
+
+    random_id = Column(Integer, primary_key=True, index=True)
+    category = Column(String)
+    menu_name = Column(String)
+    image = Column(String)
 
 # ========================= OTP CODES =========================
 class OTPCode(Base):
