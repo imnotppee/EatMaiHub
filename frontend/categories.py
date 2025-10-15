@@ -5,6 +5,7 @@ BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 API_URL = "http://127.0.0.1:5002/api/restaurants"
 
+
 def categories_view(page: ft.Page) -> ft.View:
     current_category = "อาหารไทย"  # หมวดเริ่มต้น
 
@@ -15,7 +16,7 @@ def categories_view(page: ft.Page) -> ft.View:
             ft.IconButton(
                 icon=ft.Icons.ARROW_BACK,
                 icon_color=ft.Colors.WHITE,
-                on_click=lambda e: page.go("/home")
+                on_click=lambda e: page.go("/home"),
             ),
             ft.Image(src="logo.png", width=80, height=36),
             ft.IconButton(icon=ft.Icons.PERSON, icon_color=ft.Colors.WHITE),
@@ -134,7 +135,9 @@ def categories_view(page: ft.Page) -> ft.View:
         food_list_column.controls.extend(build_food_list(data))
         title.value = category
         for btn in category_buttons.controls:
-            btn.content.controls[1].color = BRAND_ORANGE if btn.data == category else ft.Colors.BLACK87
+            btn.content.controls[1].color = (
+                BRAND_ORANGE if btn.data == category else ft.Colors.BLACK87
+            )
         page.update()
 
     # ---------- ปุ่มหมวด ----------
@@ -180,44 +183,49 @@ def categories_view(page: ft.Page) -> ft.View:
     )
 
     # ---------- Bottom Navigation ----------
+    def update_active_nav(selected_label):
+        """อัปเดตให้เฉพาะปุ่มที่เลือกเป็นสีส้ม"""
+        for item in bottom_nav_row.controls:
+            icon, text = item.content.controls
+            text.color = BRAND_ORANGE if text.value == selected_label else ft.Colors.BLACK87
+        page.update()
+
+    def nav_item(icon: str, label: str, route=None, active=False):
+        return ft.GestureDetector(
+            on_tap=lambda e: (
+                update_active_nav(label),
+                page.go(route) if route else None
+            ),
+            content=ft.Column(
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=2,
+                controls=[
+                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                    ft.Text(
+                        label,
+                        size=10,
+                        color=BRAND_ORANGE if active else ft.Colors.BLACK87,
+                    ),
+                ],
+            ),
+        )
+
+    bottom_nav_row = ft.Row(
+        alignment=ft.MainAxisAlignment.SPACE_AROUND,
+        controls=[
+            nav_item("home.png", "Home", route="/home", active=True),
+            nav_item("history.png", "History", route="/history"),
+            nav_item("review.png", "Review", route="/review"),
+            nav_item("menu.png", "More", route="/more"),
+        ],
+    )
+
     bottom_nav = ft.Container(
         bgcolor=ft.Colors.WHITE,
         border=ft.border.only(top=ft.BorderSide(1, ft.Colors.BLACK12)),
         padding=10,
         height=65,
-        content=ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_AROUND,
-            controls=[
-                ft.Column(
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[
-                        ft.Image(src="home.png", width=28, height=28),
-                        ft.Text("Home", size=10),
-                    ],
-                ),
-                ft.Column(
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[
-                        ft.Image(src="history.png", width=28, height=28),
-                        ft.Text("History", size=10),
-                    ],
-                ),
-                ft.Column(
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[
-                        ft.Image(src="review.png", width=28, height=28),
-                        ft.Text("Review", size=10),
-                    ],
-                ),
-                ft.Column(
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    controls=[
-                        ft.Image(src="menu.png", width=28, height=28),
-                        ft.Text("More", size=10),
-                    ],
-                ),
-            ],
-        ),
+        content=bottom_nav_row,
     )
 
     # ---------- Title ----------
