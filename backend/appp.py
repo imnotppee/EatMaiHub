@@ -1,4 +1,4 @@
-# appp.py
+# backend/appp.py
 from flask import Flask
 from flask_cors import CORS
 import psycopg2
@@ -22,7 +22,7 @@ DB_CONFIG = {
 }
 
 # ✅ สร้าง Flask App
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", static_url_path="/images")
 CORS(app)
 
 # ✅ ฟังก์ชันสร้างการเชื่อมต่อฐานข้อมูล

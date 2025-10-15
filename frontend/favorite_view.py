@@ -6,18 +6,35 @@ import time
 # ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-API_URL = "http://127.0.0.1:8000/api/favorites"
+API_URL = "http://127.0.0.1:8000/api/favorites"  # ✅ Backend URL
 
-
-def build_favorite_view(page: ft.Page) -> ft.View:
-    # ---------- โหลดข้อมูลจาก Backend ----------
+# ---------- โหลดข้อมูลจาก Backend ----------
+def load_favorites():
     try:
         res = requests.get(API_URL, timeout=10)
-        res.raise_for_status()
-        favorites = res.json()
+        if res.status_code == 200:
+            return res.json()
+        else:
+            print(f"⚠️ Error {res.status_code}: {res.text}")
+            return []
     except Exception as e:
-        print("⚠️ โหลดรายการโปรดไม่สำเร็จ:", e)
-        favorites = []
+        print("❌ ไม่สามารถเชื่อมต่อ backend ได้:", e)
+        return []
+
+# ---------- ลบข้อมูลรายการโปรดใน backend ----------
+def delete_favorite_api(fav_id: int):
+    try:
+        res = requests.delete(f"{API_URL}/{fav_id}", timeout=5)
+        if res.status_code == 200:
+            print(f"🗑️ ลบสำเร็จ: fav_id={fav_id}")
+        else:
+            print("⚠️ ลบไม่สำเร็จ:", res.text)
+    except Exception as e:
+        print("❌ error ในการลบ:", e)
+
+# ---------- UI หลัก ----------
+def build_favorite_view(page: ft.Page) -> ft.View:
+    favorites = load_favorites()
 
     # ---------- Header ----------
     header = ft.Container(
@@ -76,21 +93,12 @@ def build_favorite_view(page: ft.Page) -> ft.View:
     # ---------- ฟังก์ชันลบ favorite ----------
     def remove_favorite(item, card):
         def fade():
-            # ลบออกจาก DB
-            try:
-                res = requests.delete(f"{API_URL}/{item['id']}", timeout=5)
-                if res.status_code == 200:
-                    # ทำให้ค่อยๆ จางก่อนลบออก
-                    for i in range(10, -1, -1):
-                        card.opacity = i / 10
-                        page.update()
-                        time.sleep(0.03)
-                    favorites.remove(item)
-                    page.go("/favorite")
-                else:
-                    print("⚠️ ลบรายการโปรดไม่สำเร็จ:", res.text)
-            except Exception as e:
-                print("❌ Error:", e)
+            for i in range(10, -1, -1):
+                card.opacity = i / 10
+                page.update()
+                time.sleep(0.02)
+            delete_favorite_api(item.get("fav_id", item.get("id")))
+            page.go("/favorite")
 
         threading.Thread(target=fade, daemon=True).start()
 
@@ -115,7 +123,7 @@ def build_favorite_view(page: ft.Page) -> ft.View:
                     border_radius=12,
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                     content=ft.Image(
-                        src=item.get("image", "default.png"),
+                        src=item.get("image") or item.get("image_url", "default.png"),
                         fit=ft.ImageFit.COVER,
                     ),
                 ),
@@ -124,11 +132,22 @@ def build_favorite_view(page: ft.Page) -> ft.View:
                     spacing=6,
                     expand=True,
                     controls=[
-                        ft.Text(item.get("title", "ไม่ระบุ"),
-                                size=15,
-                                weight=ft.FontWeight.BOLD,
-                                color=ft.Colors.BLACK),
-                        ft.Text(item.get("time", ""), size=12, color=ft.Colors.BLACK54),
+                        ft.Text(
+                            item.get("name") or item.get("title", "ไม่ระบุ"),
+                            size=15,
+                            weight=ft.FontWeight.BOLD,
+                            color=ft.Colors.BLACK,
+                        ),
+                        ft.Text(
+                            item.get("location", "") or item.get("time", ""),
+                            size=13,
+                            color=ft.Colors.BLACK54,
+                        ),
+                        ft.Text(
+                            f"User ID: {item.get('user_id', '')}",
+                            size=12,
+                            color=ft.Colors.BLACK54,
+                        ),
                     ],
                 ),
                 ft.GestureDetector(

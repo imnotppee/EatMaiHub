@@ -40,15 +40,15 @@ if not os.path.exists(images_path):
 app.mount("/images", StaticFiles(directory=images_path), name="images")
 
 # ----------------- Include Routers -----------------
-# Auth & OAuth
-app.include_router(auth_component.router)
-app.include_router(auth_router)  # legacy router from component.auth_component
+# ✅ Auth & OAuth
+app.include_router(auth_router)  # router หลักจาก auth_component
+app.include_router(auth_component.router)  # เผื่อใช้ router ภายใน component เดิม
 app.include_router(horoscope_router)
 
-# Categories
+# ✅ Categories
 app.include_router(categories_component.router)
 
-# Components using get_conn
+# ✅ Components using get_conn (Flask-style)
 register_eat_by_color_routes(app, get_conn)
 register_highlight_routes(app, get_conn)
 register_sunbae_routes(app, get_conn)
@@ -56,7 +56,7 @@ register_urban_street_routes(app, get_conn)
 register_favorite_routes(app, get_conn)
 register_review_routes(app, get_conn)
 
-# Signup / Login / OTP / Forgot
+# ✅ Signup / Login / OTP / Forgot Password
 app.include_router(signup_component.router)
 app.include_router(login_component.router)
 app.include_router(forgotpass_component.router)
