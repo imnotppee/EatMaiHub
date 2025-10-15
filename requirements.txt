@@ -1,13 +1,19 @@
-# Frontend
+# ---------- Frontend ----------
 flet
 
-# Backend
+# ---------- Backend ----------
 fastapi
 uvicorn[standard]
 python-dotenv
 requests
+
+# ---------- Database ----------
 sqlalchemy
 psycopg2-binary
 
+# ---------- Security ----------
+bcrypt==4.1.2
+passlib[bcrypt]==1.7.4
 
-# Database
+# ---------- Email ----------
+email-validator>=2.1.0
