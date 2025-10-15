@@ -6,7 +6,7 @@ import threading
 # ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-API_BASE_URL = "http://10.117.13.249:5001/api/favorites"   # ✅ URL backend ของคุณ
+API_BASE_URL = "http://127.0.0.1:8000/api/favorites"  # ✅ URL backend ของคุณ
 
 # ---------- โหลดข้อมูลจาก Backend ----------
 def load_favorites():

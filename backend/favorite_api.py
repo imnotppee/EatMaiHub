@@ -1,18 +1,8 @@
 # backend/favorite_api.py
 from flask import jsonify, request
-import psycopg2
-
-# -------------------- 🔌 ฟังก์ชันเชื่อมต่อฐานข้อมูล --------------------
-def get_conn():
-    return psycopg2.connect(
-        host="10.117.10.236",          # IP server ของ PostgreSQL
-        database="Eat_Mai_Hub",
-        user="postgres",
-        password="1234"
-    )
 
 # -------------------- 📋 ลงทะเบียน route สำหรับ favorites --------------------
-def register_favorite_routes(app):
+def register_favorite_routes(app, get_conn):
 
     # 📋 ดึงรายการโปรดทั้งหมด
     @app.route("/api/favorites", methods=["GET"])
@@ -45,9 +35,9 @@ def register_favorite_routes(app):
             print("❌ ERROR get_favorites:", e)
             return jsonify({"error": str(e)}), 500
         finally:
-            if cur is not None:
+            if cur:
                 cur.close()
-            if conn is not None:
+            if conn:
                 conn.close()
 
     # ❤️ เพิ่มรายการโปรด
@@ -73,9 +63,9 @@ def register_favorite_routes(app):
             print("❌ ERROR add_favorite:", e)
             return jsonify({"error": str(e)}), 500
         finally:
-            if cur is not None:
+            if cur:
                 cur.close()
-            if conn is not None:
+            if conn:
                 conn.close()
 
     # 💔 ลบรายการโปรด
@@ -93,7 +83,7 @@ def register_favorite_routes(app):
             print("❌ ERROR delete_favorite:", e)
             return jsonify({"error": str(e)}), 500
         finally:
-            if cur is not None:
+            if cur:
                 cur.close()
-            if conn is not None:
+            if conn:
                 conn.close()

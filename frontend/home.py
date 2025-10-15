@@ -108,8 +108,7 @@ def build_home_view(page: ft.Page) -> ft.View:
             feature("ball.png", "กินตามดวง", route="/horoscope"),
             feature("pin.png", "ร้านใกล้ฉัน", route="/nearby"),
             feature("category.png", "หมวดหมู่", on_click=lambda e: page.go("/categories")),
-            feature("palette.png", "กินตามสีวัน", route="/color"),  
-
+            feature("palette.png", "กินตามสีวัน", route="/color"),
         ],
     )
 
@@ -280,15 +279,16 @@ def build_home_view(page: ft.Page) -> ft.View:
             controls=[
                 nav_item("home.png", "Home", route="/home", active=True),
                 nav_item("heart.png", "Favorite", route="/favorite"),
-                nav_item("review.png", "Review", route="/review"),  # ✅ เพิ่ม route ให้ปุ่มรีวิว
-                nav_item("more.png", "More"),
+                nav_item("review.png", "Review", route="/review"),
+                nav_item("more.png", "More", route="/more"),
             ],
         ),
     )
 
-    # ---------- เนื้อหา ----------
-    body = ft.Column(
+    # ---------- เนื้อหา + ตรึง bottom nav ----------
+    scroll_area = ft.Column(
         spacing=12,
+        scroll=ft.ScrollMode.ALWAYS,
         controls=[
             header,
             top_buttons,
@@ -297,8 +297,14 @@ def build_home_view(page: ft.Page) -> ft.View:
             highlight_banner,
             horo_title,
             horo_scroller,
-            ft.Container(expand=True),
-            bottom_nav,
+            ft.Container(height=80),  # เผื่อพื้นที่ปุ่มล่าง
+        ],
+    )
+
+    layout = ft.Stack(
+        controls=[
+            scroll_area,
+            ft.Container(bottom=0, left=0, right=0, content=bottom_nav),
         ],
     )
 
@@ -319,7 +325,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         height=PHONE_H,
         controls=[
             orange_gradient_bg,
-            ft.Container(padding=ft.padding.symmetric(horizontal=12, vertical=10), content=body),
+            ft.Container(padding=ft.padding.symmetric(horizontal=12, vertical=10), content=layout),
         ],
     )
 
@@ -329,12 +335,12 @@ def build_home_view(page: ft.Page) -> ft.View:
         controls=[
             ft.Container(
                 expand=True,
-                bgcolor=Colors.BLACK,
+                bgcolor=ft.Colors.BLACK,
                 alignment=ft.alignment.center,
                 content=ft.Container(
                     width=PHONE_W,
                     height=PHONE_H,
-                    bgcolor=Colors.WHITE,
+                    bgcolor=ft.Colors.WHITE,
                     content=phone_frame,
                 ),
             )
