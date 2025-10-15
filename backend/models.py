@@ -106,3 +106,11 @@ class Favorite(Base):
 
     user = relationship("User", back_populates="favorites")
     restaurant = relationship("Restaurant", back_populates="favorites")
+
+class Random(Base):
+    __tablename__ = "random"
+
+    random_id = Column(Integer, primary_key=True, index=True)
+    category = Column(String)
+    menu_name = Column(String)
+    image = Column(String)
