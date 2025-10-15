@@ -1,22 +1,16 @@
 # backend/review_api.py
-from flask import Blueprint, jsonify, request
-import psycopg2
+from flask import Blueprint, jsonify, request, current_app
 
+# ✅ สร้าง Blueprint
 review_api = Blueprint("review_api", __name__)
 
-def get_conn():
-    return psycopg2.connect(
-        host="localhost",
-        database="Eat_Mai_Hub",
-        user="postgres",
-        password="1234"
-    )
-
-# ดึงรีวิวทั้งหมด
+# -------------------- 💬 ดึงข้อมูลรีวิวทั้งหมด --------------------
 @review_api.route("/api/review", methods=["GET"])
 def get_review():
-    conn = get_conn()
+    conn_func = current_app.config["GET_CONN"]  # ดึงฟังก์ชัน get_conn จาก app.py
+    conn = conn_func()
     cur = conn.cursor()
+
     cur.execute("""
         SELECT review_id, restaurant_name, menu_name, rating, review_text
         FROM review
@@ -38,13 +32,14 @@ def get_review():
     ]
     return jsonify(review)
 
-
-# เพิ่มรีวิวใหม่
+# -------------------- ➕ เพิ่มรีวิวใหม่ --------------------
 @review_api.route("/api/review", methods=["POST"])
 def add_review():
     data = request.get_json()
-    conn = get_conn()
+    conn_func = current_app.config["GET_CONN"]
+    conn = conn_func()
     cur = conn.cursor()
+
     cur.execute("""
         INSERT INTO review (restaurant_name, menu_name, rating, review_text)
         VALUES (%s, %s, %s, %s)
@@ -57,4 +52,5 @@ def add_review():
     conn.commit()
     cur.close()
     conn.close()
+
     return jsonify({"message": "✅ Review added successfully!"})

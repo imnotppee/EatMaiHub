@@ -1,18 +1,23 @@
+# backend/app.py
 from flask import Flask, jsonify
 from flask_cors import CORS
 import psycopg2
+from review_api import review_api   # ✅ นำเข้า Blueprint
 
 app = Flask(__name__)
 CORS(app)
 
-# ✅ เชื่อมต่อฐานข้อมูล PostgreSQL
+# ✅ ฟังก์ชันเชื่อมต่อฐานข้อมูล (host จริงอยู่ที่นี่)
 def get_conn():
     return psycopg2.connect(
-        host="10.117.10.236",
+        host="10.117.9.238",
         database="Eat_Mai_Hub",
         user="postgres",
         password="1234"
     )
+
+# ✅ ส่งฟังก์ชัน get_conn ให้ Blueprint ใช้ผ่าน config
+app.config["GET_CONN"] = get_conn
 
 # -------------------- 📦 API: ดึงข้อมูลอาหาร --------------------
 @app.route("/api/foods", methods=["GET"])
@@ -46,36 +51,9 @@ def get_highlights():
     ]
     return jsonify(highlights)
 
-# -------------------- 💬 API: ดึงข้อมูลรีวิว --------------------
-@app.route("/api/review", methods=["GET"])
-def get_review():
-    conn = get_conn()
-    cur = conn.cursor()
-    # ✅ ดึงคอลัมน์ทั้งหมดจากตาราง review
-    cur.execute("""
-        SELECT review_id, restaurant_name, menu_name, rating, review_text
-        FROM review
-        ORDER BY review_id DESC;
-    """)
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
+# ✅ ลงทะเบียน Blueprint ของ review_api
+app.register_blueprint(review_api)
 
-    # ✅ แปลงข้อมูลให้เป็น JSON list
-    review = [
-        {
-            "review_id": r[0],
-            "restaurant_name": r[1].strip() if r[1] else None,
-            "menu_name": r[2].strip() if r[2] else None,
-            "rating": r[3],
-            "review_text": r[4]
-        }
-        for r in rows
-    ]
-
-    return jsonify(review)
-
-
-
+# -------------------- 🚀 เริ่มรันเซิร์ฟเวอร์ --------------------
 if __name__ == "__main__":
-    app.run(port=5001, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)
