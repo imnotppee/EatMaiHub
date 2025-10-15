@@ -2,6 +2,8 @@ from sqlalchemy import Column, Integer, String, Text, Boolean, DECIMAL, ForeignK
 from sqlalchemy.orm import relationship
 from database import Base
 
+
+# ========================= USERS =========================
 class User(Base):
     __tablename__ = "users"
 
@@ -15,12 +17,14 @@ class User(Base):
     reviews = relationship("Review", back_populates="user")
     favorites = relationship("Favorite", back_populates="user")
     history = relationship("History", back_populates="user")
+    otp_codes = relationship("OTPCode", back_populates="user", cascade="all, delete-orphan")  # ✅ เพิ่ม OTP
 
 
+# ========================= RESTAURANTS =========================
 class Restaurant(Base):
     __tablename__ = "restaurants"
 
-    restaurant_id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     description = Column(Text)
     image_url = Column(Text)
@@ -35,6 +39,7 @@ class Restaurant(Base):
     history = relationship("History", back_populates="restaurant")
 
 
+# ========================= CATEGORIES =========================
 class Category(Base):
     __tablename__ = "categories"
 
@@ -45,11 +50,12 @@ class Category(Base):
     restaurants = relationship("Restaurant", backref="category")
 
 
+# ========================= MENUS =========================
 class Menu(Base):
     __tablename__ = "menus"
 
     menu_id = Column(Integer, primary_key=True, index=True)
-    restaurant_id = Column(Integer, ForeignKey("restaurants.restaurant_id"))
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"))
     menu_name = Column(String(255))
     price = Column(DECIMAL(10, 2))
     image_url = Column(Text)
@@ -59,6 +65,7 @@ class Menu(Base):
     history = relationship("History", back_populates="menu")
 
 
+# ========================= ZODIAC =========================
 class ZodiacRecommendation(Base):
     __tablename__ = "zodiac_recommendations"
 
@@ -68,12 +75,13 @@ class ZodiacRecommendation(Base):
     image_url = Column(Text)
 
 
+# ========================= REVIEWS =========================
 class Review(Base):
     __tablename__ = "reviews"
 
     review_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.user_id"))
-    restaurant_id = Column(Integer, ForeignKey("restaurants.restaurant_id"))
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"))
     rating = Column(Integer)
     comment = Column(Text)
     created_at = Column(TIMESTAMP)
@@ -82,12 +90,13 @@ class Review(Base):
     restaurant = relationship("Restaurant", back_populates="reviews")
 
 
+# ========================= HISTORY =========================
 class History(Base):
     __tablename__ = "history"
 
     history_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.user_id"))
-    restaurant_id = Column(Integer, ForeignKey("restaurants.restaurant_id"))
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"))
     menu_id = Column(Integer, ForeignKey("menus.menu_id"))
     viewed_at = Column(TIMESTAMP)
 
@@ -96,13 +105,37 @@ class History(Base):
     menu = relationship("Menu", back_populates="history")
 
 
+# ========================= FAVORITES =========================
 class Favorite(Base):
     __tablename__ = "favorites"
 
     fav_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.user_id"))
-    restaurant_id = Column(Integer, ForeignKey("restaurants.restaurant_id"))
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"))
     created_at = Column(TIMESTAMP)
 
     user = relationship("User", back_populates="favorites")
     restaurant = relationship("Restaurant", back_populates="favorites")
+
+
+# ========================= OTP CODES =========================
+class OTPCode(Base):
+    """
+    เก็บรหัส OTP สำหรับยืนยันตัวตน/รีเซ็ตรหัสผ่าน
+    - otp_hash เก็บ hash ของรหัส (hash:salt)
+    - expires_at เวลาหมดอายุ
+    - attempts จำนวนครั้งที่พยายามใส่
+    - used ใช้แล้วหรือยัง
+    """
+    __tablename__ = "otp_codes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    email = Column(String(255), nullable=False)
+    otp_hash = Column(Text, nullable=False)
+    created_at = Column(TIMESTAMP)
+    expires_at = Column(TIMESTAMP)
+    attempts = Column(Integer, default=0)
+    used = Column(Boolean, default=False)
+
+    user = relationship("User", back_populates="otp_codes")
