@@ -1,88 +1,35 @@
-from flask import Flask, jsonify
-from flask_cors import CORS
+from flask import Flask
 import psycopg2
+from backend.component.review2_component import register_review_routes
+from backend.component.favorite2_component import register_favorite_routes
+from backend.component.urban_street_component import register_urban_street_routes
+from backend.component.eat_by_color import register_eat_by_color_routes
+from backend.component.highlight_component import register_highlight_routes
+from backend.component.sunbae_component import register_sunbae_routes
 
-app = Flask(__name__)
-CORS(app)
+# 🌍 CONFIG ส่วนกลาง
+DB_CONFIG = {
+    "host": "10.117.9.238",      # ✅ อัปเดตเป็น IP ใหม่ของ PostgreSQL
+    "database": "Eat_Mai_Hub",
+    "user": "postgres",
+    "password": "1234",
+    "port": 5432,
+}
 
-# ✅ เชื่อมต่อฐานข้อมูล PostgreSQL
 def get_conn():
-    return psycopg2.connect(
-        host="10.117.10.236",
-        database="Eat_Mai_Hub",
-        user="postgres",
-        password="1234"
-    )
+    return psycopg2.connect(**DB_CONFIG)
 
-# -------------------- 🍱 API: ดึงข้อมูล foods --------------------
-@app.route("/api/foods", methods=["GET"])
-def api_foods():
-    try:
-        conn = get_conn()
-        cur = conn.cursor()
-        cur.execute("SELECT id, name, image, type FROM foods;")
-        rows = cur.fetchall()
-        foods = [
-            {"id": r[0], "name": r[1], "image": r[2], "type": r[3]}
-            for r in rows
-        ]
-        return jsonify(foods)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cur.close()
-        conn.close()
+# 🚀 เริ่ม Flask
+app = Flask(__name__)
 
-# -------------------- 🌟 API: ดึงข้อมูล highlights --------------------
-@app.route("/api/highlights", methods=["GET"])
-def api_highlights():
-    try:
-        conn = get_conn()
-        cur = conn.cursor()
-        cur.execute("SELECT id, name, description, image_url FROM highlights;")
-        rows = cur.fetchall()
-        highlights = [
-            {"id": r[0], "name": r[1], "desc": r[2], "image": r[3]}
-            for r in rows
-        ]
-        return jsonify(highlights)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cur.close()
-        conn.close()
+register_review_routes(app, get_conn)
+register_favorite_routes(app, get_conn)
+register_urban_street_routes(app, get_conn)
+register_eat_by_color_routes(app, get_conn)
+register_highlight_routes(app, get_conn)
+register_sunbae_routes(app, get_conn)
 
-# -------------------- 🍽️ API: ดึงข้อมูล restaurants --------------------
-@app.route("/api/restaurants", methods=["GET"])
-def api_restaurants():
-    try:
-        conn = get_conn()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT id, name, description, image_url, location, is_featured, open_hours, category_id 
-            FROM restaurants;
-        """)
-        rows = cur.fetchall()
-        restaurants = [
-            {
-                "id": r[0],
-                "name": r[1],
-                "description": r[2],
-                "image": r[3],
-                "location": r[4],
-                "is_featured": r[5],
-                "open_hours": r[6],
-                "category_id": r[7],
-            }
-            for r in rows
-        ]
-        return jsonify(restaurants)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cur.close()
-        conn.close()
 
-# -------------------- 🚀 Run server --------------------
+
 if __name__ == "__main__":
-    app.run(port=5001, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)
