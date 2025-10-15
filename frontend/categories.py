@@ -1,13 +1,12 @@
 import flet as ft
 import requests
-from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-API_URL = "http://127.0.0.1:5001/api/restaurants"  # URL Flask backend
+API_URL = "http://127.0.0.1:5002/api/restaurants"
 
 def categories_view(page: ft.Page) -> ft.View:
-    current_category = "อาหารไทย"
+    current_category = "อาหารไทย"  # หมวดเริ่มต้น
 
     # ---------- Header ----------
     header_row = ft.Row(
@@ -18,7 +17,7 @@ def categories_view(page: ft.Page) -> ft.View:
                 icon_color=ft.Colors.WHITE,
                 on_click=lambda e: page.go("/home")
             ),
-            ft.Image(src="logo.png", width=36, height=36),
+            ft.Image(src="logo.png", width=80, height=36),
             ft.IconButton(icon=ft.Icons.PERSON, icon_color=ft.Colors.WHITE),
         ],
     )
@@ -38,21 +37,7 @@ def categories_view(page: ft.Page) -> ft.View:
         content=ft.Column(spacing=12, controls=[header_row, search]),
     )
 
-    # ---------- ดึงข้อมูลร้านอาหารจาก backend ----------
-    def fetch_restaurants():
-        try:
-            res = requests.get(API_URL)
-            res.raise_for_status()
-            data = res.json()
-            print("📦 Data from backend:", data)
-            return data
-        except Exception as e:
-            print("Error fetching restaurants:", e)
-            return []
-
-    all_restaurants = fetch_restaurants()
-
-    # ---------- ฟังก์ชันสร้างการ์ดร้านอาหาร ----------
+    # ---------- สร้างการ์ดร้านอาหาร ----------
     def build_food_list(food_items):
         if not food_items:
             return [
@@ -60,32 +45,34 @@ def categories_view(page: ft.Page) -> ft.View:
                     padding=20,
                     alignment=ft.alignment.center,
                     content=ft.Text(
-                        "ไม่พบหมวดหมู่ หรือไม่มีร้านในหมวดนี้",
+                        "ไม่พบร้านอาหารในหมวดนี้",
                         color=ft.Colors.RED,
                         size=14,
                         weight="bold",
                     ),
                 )
             ]
+
         cards = []
         for f in food_items:
+            if f.get("category_name") != current_category:
+                continue
             card = ft.Container(
                 bgcolor=ft.Colors.WHITE,
                 border_radius=22,
-                padding=18,
-                margin=ft.margin.symmetric(vertical=10, horizontal=8),
+                padding=12,
+                margin=ft.margin.symmetric(vertical=8, horizontal=8),
                 shadow=ft.BoxShadow(
-                    blur_radius=15,
+                    blur_radius=10,
                     spread_radius=1,
                     color=ft.Colors.with_opacity(0.15, ft.Colors.BLACK),
                 ),
-                height=140,
                 content=ft.Row(
                     spacing=14,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     controls=[
                         ft.Container(
-                            width=100,
+                            width=110,
                             height=100,
                             border_radius=12,
                             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
@@ -95,9 +82,8 @@ def categories_view(page: ft.Page) -> ft.View:
                             ),
                         ),
                         ft.Column(
-                            alignment=ft.MainAxisAlignment.CENTER,
-                            horizontal_alignment=ft.CrossAxisAlignment.START,
-                            spacing=6,
+                            alignment=ft.MainAxisAlignment.START,
+                            spacing=4,
                             expand=True,
                             controls=[
                                 ft.Text(
@@ -105,31 +91,23 @@ def categories_view(page: ft.Page) -> ft.View:
                                     size=14,
                                     weight="bold",
                                     color=ft.Colors.BLACK87,
-                                    max_lines=1,
-                                    overflow="ellipsis",
-                                    width=180,
-                                ),
-                                ft.Row(
-                                    spacing=5,
-                                    controls=[
-                                        ft.Icon(
-                                            name=ft.Icons.LOCATION_ON_ROUNDED,
-                                            color="#FF6F61",
-                                            size=18,
-                                        ),
-                                        ft.Text(
-                                            f"ที่อยู่ : {f.get('location', '-')}",
-                                            size=12,
-                                            color=ft.Colors.BLACK54,
-                                        ),
-                                    ],
                                 ),
                                 ft.Text(
-                                    f"หมวดหมู่ : {f.get('category', '-')}",
+                                    f"รีวิว : 4.{f.get('id', 0)} ดาว",
                                     size=12,
-                                    color=BRAND_ORANGE,
+                                    color=ft.Colors.BLACK87,
+                                ),
+                                ft.Text(
+                                    f"ที่อยู่ : {f.get('location', '-')}",
+                                    size=12,
+                                    color=ft.Colors.BLACK54,
                                 ),
                             ],
+                        ),
+                        ft.IconButton(
+                            icon=ft.Icons.FAVORITE_BORDER,
+                            icon_color=BRAND_ORANGE,
+                            icon_size=24,
                         ),
                     ],
                 ),
@@ -137,32 +115,33 @@ def categories_view(page: ft.Page) -> ft.View:
             cards.append(card)
         return cards
 
-    # ---------- ฟังก์ชันกรองร้านตามหมวด ----------
-    def get_category_restaurants(category_name):
-        filtered = [r for r in all_restaurants if r.get("category") == category_name]
-        print(f"🎯 Filter '{category_name}' => {len(filtered)} results")
-        return filtered
-
-    # ---------- รายการร้านอาหาร ----------
+    # ---------- แสดงรายการร้าน ----------
     food_list_column = ft.Column(spacing=12, scroll=ft.ScrollMode.AUTO, expand=True)
-    food_list_column.controls = build_food_list(get_category_restaurants(current_category))
 
-    # ---------- เปลี่ยนหมวด ----------
-    def change_category(e):
+    # ---------- โหลดข้อมูลจาก backend ----------
+    def load_restaurants(category):
         nonlocal current_category
-        current_category = e.control.data
+        current_category = category
+        try:
+            res = requests.get(API_URL)
+            res.raise_for_status()
+            data = res.json()
+        except Exception as ex:
+            print("Error fetching data:", ex)
+            data = []
+
         food_list_column.controls.clear()
-        food_list_column.controls.extend(
-            build_food_list(get_category_restaurants(current_category))
-        )
-        title.value = f"ร้านอาหาร - {current_category}"
+        food_list_column.controls.extend(build_food_list(data))
+        title.value = category
+        for btn in category_buttons.controls:
+            btn.content.controls[1].color = BRAND_ORANGE if btn.data == category else ft.Colors.BLACK87
         page.update()
 
     # ---------- ปุ่มหมวด ----------
     def category_card(img: str, label: str, active=False):
         return ft.GestureDetector(
             data=label,
-            on_tap=change_category,
+            on_tap=lambda e: load_restaurants(label),
             content=ft.Column(
                 [
                     ft.Container(
@@ -170,10 +149,7 @@ def categories_view(page: ft.Page) -> ft.View:
                         height=72,
                         bgcolor=ft.Colors.WHITE,
                         border_radius=12,
-                        shadow=ft.BoxShadow(
-                            blur_radius=8,
-                            color=ft.Colors.BLACK12,
-                        ),
+                        shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.BLACK12),
                         alignment=ft.alignment.center,
                         content=ft.Image(
                             src=img,
@@ -205,44 +181,40 @@ def categories_view(page: ft.Page) -> ft.View:
 
     # ---------- Bottom Navigation ----------
     bottom_nav = ft.Container(
-        bgcolor=Colors.WHITE,
-        border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
+        bgcolor=ft.Colors.WHITE,
+        border=ft.border.only(top=ft.BorderSide(1, ft.Colors.BLACK12)),
         padding=10,
         height=65,
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_AROUND,
             controls=[
-                ft.GestureDetector(
-                    on_tap=lambda e: page.go("/home"),
-                    content=ft.Column(
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        spacing=2,
-                        controls=[
-                            ft.Image(
-                                src="home.png",
-                                width=28,
-                                height=28,
-                                fit=ft.ImageFit.CONTAIN,
-                            ),
-                            ft.Text("Home", size=10),
-                        ],
-                    ),
+                ft.Column(
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Image(src="home.png", width=28, height=28),
+                        ft.Text("Home", size=10),
+                    ],
                 ),
-                ft.GestureDetector(
-                    on_tap=lambda e: page.go("/favorite"),
-                    content=ft.Column(
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        spacing=2,
-                        controls=[
-                            ft.Image(
-                                src="heart.png",
-                                width=28,
-                                height=28,
-                                fit=ft.ImageFit.CONTAIN,
-                            ),
-                            ft.Text("Favorite", size=10),
-                        ],
-                    ),
+                ft.Column(
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Image(src="history.png", width=28, height=28),
+                        ft.Text("History", size=10),
+                    ],
+                ),
+                ft.Column(
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Image(src="review.png", width=28, height=28),
+                        ft.Text("Review", size=10),
+                    ],
+                ),
+                ft.Column(
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Image(src="menu.png", width=28, height=28),
+                        ft.Text("More", size=10),
+                    ],
                 ),
             ],
         ),
@@ -250,7 +222,7 @@ def categories_view(page: ft.Page) -> ft.View:
 
     # ---------- Title ----------
     title = ft.Text(
-        f"ร้านอาหาร - {current_category}",
+        current_category,
         size=18,
         weight="bold",
         color=BRAND_ORANGE,
@@ -269,7 +241,7 @@ def categories_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- Gradient Background ----------
+    # ---------- Background ----------
     orange_gradient_bg = ft.Container(
         width=PHONE_W,
         height=340,
@@ -300,6 +272,10 @@ def categories_view(page: ft.Page) -> ft.View:
             ),
         ],
     )
+
+    # ---------- โหลดค่าเริ่มต้น ----------
+    page.add(ft.Container())
+    load_restaurants(current_category)
 
     # ---------- Return View ----------
     return ft.View(
