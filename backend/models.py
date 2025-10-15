@@ -117,6 +117,14 @@ class Favorite(Base):
     restaurant = relationship("Restaurant", back_populates="favorites")
 
 
+class Random(Base):
+    __tablename__ = "random"
+
+    random_id = Column(Integer, primary_key=True, index=True)
+    category = Column(String)
+    menu_name = Column(String)
+    image = Column(String)
+
 # ========================= OTP CODES =========================
 class OTPCode(Base):
     """
