@@ -1,17 +1,20 @@
 import flet as ft
-import json
-import os
+import requests  # ✅ เพิ่มเพื่อดึงข้อมูลจาก backend
 from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-
+API_URL = "http://127.0.0.1:8000/api/highlights"  # ✅ URL backend
 
 def build_highlight_view(page: ft.Page) -> ft.View:
-    # ---------- โหลดข้อมูลร้านจาก highlight.json ----------
-    data_path = os.path.join(os.path.dirname(__file__), "data", "highlight.json")
-    with open(data_path, "r", encoding="utf-8") as f:
-        restaurants = json.load(f)
+    # ---------- โหลดข้อมูลร้านจาก Database ผ่าน API ----------
+    try:
+        res = requests.get(API_URL, timeout=5)
+        res.raise_for_status()
+        restaurants = res.json()
+    except Exception as e:
+        print("❌ โหลดข้อมูลร้านเด็ดไม่สำเร็จ:", e)
+        restaurants = []  # fallback ถ้าโหลดไม่ได้
 
     # ---------- Header ----------
     header_row = ft.Row(
@@ -99,14 +102,15 @@ def build_highlight_view(page: ft.Page) -> ft.View:
     for r in restaurants:
         name_lower = r["name"].lower()
 
-        if "urban" in name_lower:
-            route = "/urban"
-        elif "sunbae" in name_lower:
+        if "sunbae" in name_lower:
             route = "/sunbae"
-        elif "hotto bun" in name_lower:
+        elif "urban" in name_lower:
+            route = "/urban"
+        elif "hotto" in name_lower:
             route = "/hottobun"
         else:
             route = None
+
 
         restaurant_list.controls.append(
             restaurant_card(r["image"], r["name"], r["desc"], route)

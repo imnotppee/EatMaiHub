@@ -1,8 +1,9 @@
+# main.py
 from fastapi import FastAPI
 from database import engine, Base
-from component import auth_component, review_component
+from component import auth_component
 
-# ✅ สร้างตารางอัตโนมัติ
+# ----------------- สร้างตารางอัตโนมัติ -----------------
 Base.metadata.create_all(bind=engine)
 
 # ✅ สร้าง FastAPI app
@@ -10,9 +11,13 @@ app = FastAPI(title="EatMaiHub Backend API", version="1.0")
 
 # ✅ รวมทุก router
 app.include_router(auth_component.router)
-app.include_router(review_component.router)
 
 # ✅ root endpoint
 @app.get("/")
 def home():
     return {"message": "EatMaiHub Backend is running 🚀"}
+
+# ----------------- Entry Point -----------------
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

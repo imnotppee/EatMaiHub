@@ -1,7 +1,6 @@
 import flet as ft
-import json
-import os
 import datetime
+import requests
 from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
@@ -9,13 +8,22 @@ PHONE_W, PHONE_H = 412, 917
 
 
 def build_horoscope_view(page: ft.Page) -> ft.View:
-    # ---------- โหลดข้อมูลจาก JSON ----------
-    data_path = os.path.join(os.path.dirname(__file__), "data", "horoscope_foods.json")
-    if not os.path.exists(data_path):
-        raise FileNotFoundError("❌ ไม่พบไฟล์ data/horoscope_foods.json")
+    # ---------- โหลดข้อมูลจาก API ----------
+    API_URL = "http://127.0.0.1:8000/api/horoscope"  # ✅ backend port 8000
+    # ถ้า backend อยู่คนละเครื่อง เช่น IP 10.117.9.238 ให้ใช้:
+    # API_URL = "http://10.117.9.238:8000/api/horoscope"
 
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    try:
+        response = requests.get(API_URL)
+        if response.status_code == 200:
+            data = response.json()
+            print("✅ โหลดข้อมูลจาก API สำเร็จ")
+        else:
+            print(f"❌ API error: {response.status_code}")
+            data = {}
+    except Exception as e:
+        print("❌ โหลดข้อมูลจาก API ไม่ได้:", e)
+        data = {}
 
     # ---------- ตรวจวันปัจจุบัน ----------
     weekday_map = {
@@ -25,7 +33,7 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
         3: ("Thursday", "วันพฤหัสบดี"),
         4: ("Friday", "วันศุกร์"),
         5: ("Saturday", "วันเสาร์"),
-        6: ("Sunday", "วันอาทิตย์")
+        6: ("Sunday", "วันอาทิตย์"),
     }
 
     weekday_index = datetime.datetime.now().weekday()
@@ -38,7 +46,7 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
         gradient=ft.LinearGradient(
             begin=ft.alignment.top_center,
             end=ft.alignment.bottom_center,
-            colors=[BRAND_ORANGE, "#F6D0A0"]
+            colors=[BRAND_ORANGE, "#F6D0A0"],
         ),
         padding=ft.padding.only(left=16, right=16, top=30, bottom=16),
         content=ft.Column(
@@ -89,6 +97,11 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
 
     # ---------- การ์ดแสดงเมนู ----------
     def food_card(food):
+        image_url = food.get("image", "")
+        # ✅ กันกรณีรูปโหลดไม่ได้
+        if not image_url:
+            image_url = "http://127.0.0.1:8000/images/default.jpg"
+
         return ft.Container(
             width=PHONE_W - 40,
             bgcolor=ft.Colors.WHITE,
@@ -100,16 +113,26 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=8,
                 controls=[
-                    ft.Text(food["category"], size=15, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
+                    ft.Text(
+                        food["category"],
+                        size=15,
+                        weight=ft.FontWeight.BOLD,
+                        color=BRAND_ORANGE,
+                    ),
                     ft.Container(
                         height=180,
                         width=PHONE_W - 80,
                         border_radius=12,
                         clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                        content=ft.Image(src=food["image"], fit=ft.ImageFit.COVER),
+                        content=ft.Image(src=image_url, fit=ft.ImageFit.COVER),
                     ),
                     ft.Text(food["title"], size=16, weight=ft.FontWeight.BOLD),
-                    ft.Text(food["subtitle"], size=12, text_align=ft.TextAlign.CENTER, color=ft.Colors.BLACK87),
+                    ft.Text(
+                        food["subtitle"],
+                        size=12,
+                        text_align=ft.TextAlign.CENTER,
+                        color=ft.Colors.BLACK87,
+                    ),
                 ],
             ),
         )
@@ -140,8 +163,14 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=2,
                 controls=[
-                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
-                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
+                    ft.Image(
+                        src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN
+                    ),
+                    ft.Text(
+                        label,
+                        size=10,
+                        color=BRAND_ORANGE if active else ft.Colors.BLACK87,
+                    ),
                 ],
             ),
         )
@@ -161,6 +190,7 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
             ],
         ),
     )
+
     # ---------- Layout รวม ----------
     layout = ft.Column(
         expand=True,

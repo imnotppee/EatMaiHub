@@ -17,8 +17,7 @@ from nearby_view import build_nearby_view
 from favorite_view import build_favorite_view
 from eat_by_color import build_color_view
 from review_view import build_review_view
-
-
+from more_view import build_more_view    # ✅ เพิ่มการ import หน้า More
 
 
 def main(page: ft.Page):
@@ -44,7 +43,7 @@ def main(page: ft.Page):
     except Exception:
         pass
 
-        # ---------- router ----------
+    # ---------- router ----------
     def route_change(e: ft.RouteChangeEvent):
         page.views.clear()
         r = page.route
@@ -71,20 +70,22 @@ def main(page: ft.Page):
             page.views.append(build_horoscope_view(page))
         elif r == "/random":       # ✅ สุ่มอาหาร
             page.views.append(build_spin_view(page))
-        elif r == "/review":
+        elif r == "/review":       # ✅ รีวิว
             page.views.append(build_review_view(page))
-        elif r == "/nearby":
+        elif r == "/nearby":       # ✅ ร้านใกล้ฉัน
             page.views.append(build_nearby_view(page))
-        elif r == "/favorite":
+        elif r == "/favorite":     # ✅ รายการโปรด
             page.views.append(build_favorite_view(page))
-        elif r == "/color":        # ✅ เพิ่ม route ใหม่
+        elif r == "/color":        # ✅ กินตามสีวัน
             page.views.append(build_color_view(page))
+        elif r == "/more":         # ✅ หน้า More (ตั้งค่า/เกี่ยวกับ)
+            page.views.append(build_more_view(page))
         else:
             page.views.append(build_login_view(page))  # ✅ default = หน้า Login
 
         page.update()
 
-
+    # ---------- กลับหน้าก่อนหน้า ----------
     def view_pop(e: ft.ViewPopEvent):
         page.views.pop()
         if page.views:
