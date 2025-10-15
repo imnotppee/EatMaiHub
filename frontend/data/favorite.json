@@ -1,6 +1,5 @@
 [
   {
-<<<<<<< HEAD
     "title": "ผัดไทย คลาสสิค",
     "category": "อาหารไทย",
     "image": "assets/thai1.png",
@@ -17,9 +16,9 @@
   {
     "title": "Urban Street สเต็กถาดปราบเซียน",
     "image": "banner.png"
-=======
+  },
+  {
     "title": "Hotto Bun ホットバン",
     "image": "banner3.png"
->>>>>>> origin/main
   }
 ]

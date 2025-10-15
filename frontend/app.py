@@ -15,7 +15,9 @@ from horoscope_view import build_horoscope_view
 from random_food import RandomFoodPage    # ✅ ใช้ class ใหม่แทน build_spin_view
 from nearby_view import build_nearby_view
 from favorite_view import build_favorite_view
-from eat_by_color import build_color_view  
+from eat_by_color import build_color_view
+from review_view import build_review_view
+from more_view import build_more_view    # ✅ เพิ่มหน้า More
 
 
 # ---------- ฟังก์ชันหลัก ----------
@@ -66,13 +68,17 @@ def main(page: ft.Page):
         elif r == "/horoscope":
             page.views.append(build_horoscope_view(page))
         elif r == "/random":
-            page.views.append(RandomFoodPage(page))   # ✅ OOP Version
+            page.views.append(RandomFoodPage(page))   # ✅ ใช้คลาสใหม่
+        elif r == "/review":
+            page.views.append(build_review_view(page))
         elif r == "/nearby":
             page.views.append(build_nearby_view(page))
         elif r == "/favorite":
             page.views.append(build_favorite_view(page))
         elif r == "/color":
             page.views.append(build_color_view(page))
+        elif r == "/more":
+            page.views.append(build_more_view(page))
         else:
             page.views.append(build_login_view(page))
 
