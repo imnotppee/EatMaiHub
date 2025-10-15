@@ -10,7 +10,7 @@ PHONE_W, PHONE_H = 412, 917
 def load_color_data():
     try:
         # ✅ เปลี่ยนจากอ่านไฟล์ JSON เป็นดึงข้อมูลจาก Flask Backend
-        res = requests.get("http://localhost:5001/api/color-menus")
+        res = requests.get("http://127.0.0.1:8000/api/color-menus")
         if res.status_code == 200:
             return res.json()
         else:

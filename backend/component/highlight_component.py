@@ -1,7 +1,8 @@
-from flask import jsonify
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
 def register_highlight_routes(app, get_conn):
-    @app.route("/api/highlights", methods=["GET"])
+    @app.get("/api/highlights")
     def get_highlights():
         conn = get_conn()
         cur = conn.cursor()
@@ -18,9 +19,9 @@ def register_highlight_routes(app, get_conn):
             {
                 "id": r[0],
                 "name": r[1],
-                "image": f"http://127.0.0.1:5001/images/{r[2]}",
+                "image": f"http://127.0.0.1:8000/images/{r[2]}",
                 "desc": r[3],
             }
             for r in rows
         ]
-        return jsonify(data)
+        return JSONResponse(content=data)

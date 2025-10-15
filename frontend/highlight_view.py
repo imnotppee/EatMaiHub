@@ -4,7 +4,7 @@ from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-API_URL = "http://127.0.0.1:5001/api/highlights"  # ✅ URL backend
+API_URL = "http://127.0.0.1:8000/api/highlights"  # ✅ URL backend
 
 def build_highlight_view(page: ft.Page) -> ft.View:
     # ---------- โหลดข้อมูลร้านจาก Database ผ่าน API ----------

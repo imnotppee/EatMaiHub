@@ -7,9 +7,9 @@ BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
 # ---------- API URL ----------
-API_FAVORITE = "http://127.0.0.1:5001/api/favorites"
-API_REVIEW = "http://127.0.0.1:5001/api/reviews"
-API_SUNBAE = "http://127.0.0.1:5001/api/sunbae"
+API_FAVORITE = "http://127.0.0.1:8000/api/favorites"
+API_REVIEW = "http://127.0.0.1:8000/api/reviews"
+API_SUNBAE = "http://127.0.0.1:8000/api/sunbae"
  
 
 # ---------- VIEW ----------

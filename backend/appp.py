@@ -1,11 +1,11 @@
 from flask import Flask
 import psycopg2
-from routes.review_routes import register_review_routes
-from routes.favorite_routes import register_favorite_routes
-from urban_street import register_urban_street_routes
-from eat_by_color import register_eat_by_color_routes
-from highlight import register_highlight_routes
-from sunbae import register_sunbae_routes
+from backend.component.review2_component import register_review_routes
+from backend.component.favorite2_component import register_favorite_routes
+from backend.component.urban_street_component import register_urban_street_routes
+from backend.component.eat_by_color import register_eat_by_color_routes
+from backend.component.highlight_component import register_highlight_routes
+from backend.component.sunbae_component import register_sunbae_routes
 
 # 🌍 CONFIG ส่วนกลาง
 DB_CONFIG = {

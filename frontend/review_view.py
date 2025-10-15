@@ -3,7 +3,7 @@ import requests
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-API_URL = "http://127.0.0.1:5001/api/reviews"
+API_URL = "http://127.0.0.1:8000/api/reviews"
 
 
 def build_review_view(page: ft.Page) -> ft.View:

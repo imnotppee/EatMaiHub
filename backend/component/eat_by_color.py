@@ -1,7 +1,10 @@
-from flask import jsonify
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
 def register_eat_by_color_routes(app, get_conn):
-    @app.route("/api/color-menus", methods=["GET"])
+    router = APIRouter()
+
+    @router.get("/api/color-menus")
     def get_color_menus():
         conn = get_conn()
         cur = conn.cursor()
@@ -17,9 +20,13 @@ def register_eat_by_color_routes(app, get_conn):
 
         data = {}
         for color_key, food_name, image_url in rows:
+            # ✅ ตัด "images/" ออกถ้ามีอยู่ในชื่อไฟล์
+            clean_image = image_url.replace("images/", "").replace("/images/", "")
             data.setdefault(color_key, []).append({
                 "name": food_name,
-                "image": f"http://127.0.0.1:5001/images/{image_url}"
+                "image": f"http://127.0.0.1:8000/images/{clean_image}"
             })
 
-        return jsonify(data)
+        return JSONResponse(content=data)
+
+    app.include_router(router)

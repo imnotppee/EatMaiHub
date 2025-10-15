@@ -31,7 +31,7 @@ def save_reviews(data):
 # ---------- VIEW หลัก ----------
 def build_urban_view(page: ft.Page) -> ft.View:
     # ---------- โหลดข้อมูลร้านจาก Backend ----------
-    API_URL = "http://127.0.0.1:5001/api/urban-street"
+    API_URL = "http://127.0.0.1:8000/api/urban-street"
 
     try:
         res = requests.get(API_URL)
@@ -61,7 +61,7 @@ def build_urban_view(page: ft.Page) -> ft.View:
     # ---------- toggle_favorite (เชื่อม backend) ----------
     def toggle_favorite(e):
         nonlocal favorites
-        backend_url = "http://127.0.0.1:5001/api/favorites"
+        backend_url = "http://127.0.0.1:8000/api/favorites"
 
         try:
             if is_favorite():
@@ -247,7 +247,7 @@ def build_urban_view(page: ft.Page) -> ft.View:
 
 
         try:
-            res = requests.post("http://127.0.0.1:5001/api/reviews", json=new_review)
+            res = requests.post("http://127.0.0.1:8000/api/reviews", json=new_review)
             if res.status_code == 201:
                 print("✅ ส่งรีวิวไป backend สำเร็จ")
                 msg = "ส่งรีวิวสำเร็จ!"

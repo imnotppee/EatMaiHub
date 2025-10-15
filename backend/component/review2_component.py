@@ -1,13 +1,14 @@
-from flask import Blueprint, jsonify, request
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 import datetime
 
 def register_review_routes(app, get_conn):
-    bp = Blueprint("review_routes", __name__)
+    router = APIRouter()
 
     # ✅ เพิ่มรีวิวใหม่
-    @bp.route("/api/reviews", methods=["POST"])
-    def add_review():
-        data = request.get_json()
+    @router.post("/api/reviews")
+    async def add_review(request: Request):
+        data = await request.json()
         conn = get_conn()
         cur = conn.cursor()
         try:
@@ -22,27 +23,27 @@ def register_review_routes(app, get_conn):
                 )
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (
-                data.get("restaurant_table"),  # ← ใช้ชื่อร้านเก็บใน restaurant_name ด้วย
-                data.get("menu_name"),         # ← ชื่อเมนู
-                data.get("stars"),             # ← คะแนน
-                data.get("comment"),           # ← รีวิวข้อความ
-                data.get("user_id"),           # ← ID ผู้ใช้
-                data.get("restaurant_table")   # ← ชื่อร้านเก็บใน restaurant_table อีกที่
+                data.get("restaurant_table"),
+                data.get("menu_name"),
+                data.get("stars"),
+                data.get("comment"),
+                data.get("user_id"),
+                data.get("restaurant_table")
             ))
             conn.commit()
-            return jsonify({"status": "review_added"}), 201
+            return JSONResponse(content={"status": "review_added"}, status_code=201)
 
         except Exception as e:
             conn.rollback()
             print("❌ ERROR:", e)
-            return jsonify({"error": str(e)}), 500
+            return JSONResponse(content={"error": str(e)}, status_code=500)
 
         finally:
             cur.close()
             conn.close()
 
     # ✅ ดึงรีวิวทั้งหมด
-    @bp.route("/api/reviews", methods=["GET"])
+    @router.get("/api/reviews")
     def get_reviews():
         conn = get_conn()
         cur = conn.cursor()
@@ -66,6 +67,6 @@ def register_review_routes(app, get_conn):
             }
             for r in rows
         ]
-        return jsonify(data)
+        return JSONResponse(content=data)
 
-    app.register_blueprint(bp)
+    app.include_router(router)
