@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from database import engine, Base
-
+from component import (
+    random_component)
 
 # ✅ Import models ทั้งหมด เพื่อให้ SQLAlchemy รู้จักทุกตารางก่อนสร้าง
 from models import (
@@ -18,11 +19,11 @@ app = FastAPI(title="EatMaiHub Backend API", version="1.0")
 
 # ✅ รวมทุก router (ตัวอย่างคือ Google OAuth)
 
-app.include_router(auth_component.router)
-app.include_router(signup_component.router)
-app.include_router(login_component.router)
-app.include_router(forgotpass_component.router)
-app.include_router(otp_component.router)
+#app.include_router(auth_component.router)
+#app.include_router(signup_component.router)
+#app.include_router(login_component.router)
+#app.include_router(forgotpass_component.router)
+#app.include_router(otp_component.router)
 app.include_router(random_component.router)
 
 # ✅ root endpoint
