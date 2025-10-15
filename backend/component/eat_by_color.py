@@ -1,0 +1,32 @@
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
+
+def register_eat_by_color_routes(app, get_conn):
+    router = APIRouter()
+
+    @router.get("/api/color-menus")
+    def get_color_menus():
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT c.color_key, cm.food_name, cm.image_url
+            FROM colors c
+            JOIN colormenus cm ON cm.color_id = c.id
+            ORDER BY c.id;
+        """)
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        data = {}
+        for color_key, food_name, image_url in rows:
+            # ✅ ตัด "images/" ออกถ้ามีอยู่ในชื่อไฟล์
+            clean_image = image_url.replace("images/", "").replace("/images/", "")
+            data.setdefault(color_key, []).append({
+                "name": food_name,
+                "image": f"http://127.0.0.1:8000/images/{clean_image}"
+            })
+
+        return JSONResponse(content=data)
+
+    app.include_router(router)

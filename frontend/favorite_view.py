@@ -1,30 +1,23 @@
 import flet as ft
-import json
-import os
-import time
+import requests
 import threading
+import time
 
 # ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-FAV_PATH = os.path.join(os.path.dirname(__file__), "data", "favorite.json")
-
-
-def load_favorites():
-    if os.path.exists(FAV_PATH):
-        with open(FAV_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
-
-
-def save_favorites(favorites):
-    os.makedirs(os.path.dirname(FAV_PATH), exist_ok=True)
-    with open(FAV_PATH, "w", encoding="utf-8") as f:
-        json.dump(favorites, f, ensure_ascii=False, indent=2)
+API_URL = "http://127.0.0.1:8000/api/favorites"
 
 
 def build_favorite_view(page: ft.Page) -> ft.View:
-    favorites = load_favorites()
+    # ---------- โหลดข้อมูลจาก Backend ----------
+    try:
+        res = requests.get(API_URL, timeout=10)
+        res.raise_for_status()
+        favorites = res.json()
+    except Exception as e:
+        print("⚠️ โหลดรายการโปรดไม่สำเร็จ:", e)
+        favorites = []
 
     # ---------- Header ----------
     header = ft.Container(
@@ -80,14 +73,29 @@ def build_favorite_view(page: ft.Page) -> ft.View:
         ),
     )
 
+    # ---------- ฟังก์ชันลบ favorite ----------
+    def remove_favorite(item, card):
+        def fade():
+            # ลบออกจาก DB
+            try:
+                res = requests.delete(f"{API_URL}/{item['id']}", timeout=5)
+                if res.status_code == 200:
+                    # ทำให้ค่อยๆ จางก่อนลบออก
+                    for i in range(10, -1, -1):
+                        card.opacity = i / 10
+                        page.update()
+                        time.sleep(0.03)
+                    favorites.remove(item)
+                    page.go("/favorite")
+                else:
+                    print("⚠️ ลบรายการโปรดไม่สำเร็จ:", res.text)
+            except Exception as e:
+                print("❌ Error:", e)
+
+        threading.Thread(target=fade, daemon=True).start()
+
     # ---------- การ์ดโปรด ----------
     def favorite_card(item):
-        heart_icon = ft.Icon(
-            name=ft.Icons.FAVORITE,  # หัวใจเต็ม
-            color=BRAND_ORANGE,
-            size=26,
-        )
-
         card = ft.Container(
             bgcolor=ft.Colors.WHITE,
             border_radius=16,
@@ -96,22 +104,6 @@ def build_favorite_view(page: ft.Page) -> ft.View:
             margin=ft.margin.only(bottom=14),
             opacity=1,
         )
-
-        # เมื่อกดหัวใจ → จางหาย + ลบออกจาก JSON
-        def remove_favorite(e):
-            def fade():
-                for i in range(10, -1, -1):
-                    card.opacity = i / 10
-                    page.update()
-                    time.sleep(0.02)
-
-                nonlocal favorites
-                favorites[:] = [f for f in favorites if f["title"] != item["title"]]
-                save_favorites(favorites)
-                page.update()
-                page.go("/favorite")
-
-            threading.Thread(target=fade, daemon=True).start()
 
         card.content = ft.Row(
             spacing=14,
@@ -132,17 +124,21 @@ def build_favorite_view(page: ft.Page) -> ft.View:
                     spacing=6,
                     expand=True,
                     controls=[
-                        ft.Text(
-                            item.get("title", "ไม่ระบุ"),
-                            size=15,
-                            weight=ft.FontWeight.BOLD,
-                            color=ft.Colors.BLACK,
-                        ),
-                        ft.Text(item.get("category", ""), size=13, color=ft.Colors.BLACK54),
+                        ft.Text(item.get("title", "ไม่ระบุ"),
+                                size=15,
+                                weight=ft.FontWeight.BOLD,
+                                color=ft.Colors.BLACK),
                         ft.Text(item.get("time", ""), size=12, color=ft.Colors.BLACK54),
                     ],
                 ),
-                ft.GestureDetector(on_tap=remove_favorite, content=heart_icon),
+                ft.GestureDetector(
+                    on_tap=lambda e: remove_favorite(item, card),
+                    content=ft.Icon(
+                        name=ft.Icons.FAVORITE,
+                        color=BRAND_ORANGE,
+                        size=26,
+                    ),
+                ),
             ],
         )
         return card
@@ -157,7 +153,11 @@ def build_favorite_view(page: ft.Page) -> ft.View:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=12,
                 controls=[
-                    ft.Icon(name=ft.Icons.FAVORITE_BORDER, size=60, color=ft.Colors.BLACK45),
+                    ft.Icon(
+                        name=ft.Icons.FAVORITE_BORDER,
+                        size=60,
+                        color=ft.Colors.BLACK45,
+                    ),
                     ft.Text("ยังไม่มีรายการโปรด", size=14, color=ft.Colors.BLACK54),
                 ],
             ),
