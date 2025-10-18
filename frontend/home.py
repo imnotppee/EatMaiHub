@@ -80,16 +80,9 @@ def build_home_view(page: ft.Page) -> ft.View:
         ],
     )
 
-    # ---------- Feature 4 อัน (รวมฟีเจอร์ทั้งสองเวอร์ชัน) ----------
+    # ---------- Feature 4 อัน ----------
     def feature(icon_src: str, label: str, route=None, on_click=None):
-        """
-        ฟังก์ชันนี้รองรับทั้ง:
-        - route="/path" เพื่อให้ page.go() ไปหน้าใหม่
-        - on_click=lambda e: ... เพื่อใส่ฟังก์ชันเอง
-        """
-        # ถ้ามี route ให้สร้าง handler ไปหน้านั้น ถ้ามี on_click ให้ใช้เอง
         handler = on_click or (lambda e: page.go(route) if route else None)
-
         return ft.GestureDetector(
             on_tap=handler,
             content=ft.Container(
@@ -109,19 +102,17 @@ def build_home_view(page: ft.Page) -> ft.View:
             ),
         )
 
-
     feature_row = ft.Row(
         alignment=ft.MainAxisAlignment.SPACE_AROUND,
         controls=[
             feature("ball.png", "กินตามดวง", route="/horoscope"),
             feature("pin.png", "ร้านใกล้ฉัน", route="/nearby"),
             feature("category.png", "หมวดหมู่", on_click=lambda e: page.go("/categories")),
-            feature("palette.png", "กินตามสีวัน"),
+            feature("palette.png", "กินตามสีวัน", route="/color"),
         ],
     )
 
-
-    # ---------- ร้านเด็ด (Banner slide ทีละรูป + จุด indicator) ----------
+    # ---------- ร้านเด็ด (แบนเนอร์) ----------
     highlight_title = ft.Row(
         alignment=ft.MainAxisAlignment.START,
         controls=[
@@ -143,7 +134,6 @@ def build_home_view(page: ft.Page) -> ft.View:
         height=180,
     )
 
-    # จุด indicator
     dots = ft.Row(
         alignment=ft.MainAxisAlignment.CENTER,
         spacing=6,
@@ -178,25 +168,22 @@ def build_home_view(page: ft.Page) -> ft.View:
         if start is None or end is None:
             return
         delta = end - start
-        if delta < -50:   # ปัดซ้าย
+        if delta < -50:
             update_banner(current_index + 1)
-        elif delta > 50:  # ปัดขวา
+        elif delta > 50:
             update_banner(current_index - 1)
         drag_start_x["value"] = None
         drag_last_x["value"] = None
 
-    # ✅ เพิ่มให้กด banner แล้วไปหน้าอื่น
-        # ✅ รวมฟังก์ชัน on_banner_tap() ให้รองรับทุกแบนเนอร์
     def on_banner_tap(e):
         if current_index == 0:
-            page.go("/urban")  # banner แรก → Urban Street
+            page.go("/urban")
         elif current_index == 1:
-            page.go("/sunbae")  # banner ที่สอง → Sunbae Korean Restaurant
+            page.go("/sunbae")
         elif current_index == 2:
-            page.go("/hottobun")  # banner ที่สาม → Hotto Bun
+            page.go("/hottobun")
         else:
-            page.go("/highlight")  # fallback ถ้า index เกิน
-
+            page.go("/highlight")
 
     highlight_banner = ft.Column(
         spacing=6,
@@ -270,15 +257,15 @@ def build_home_view(page: ft.Page) -> ft.View:
     )
 
     # ---------- Bottom nav ----------
-    def nav_item(icon: str, label: str, active=False, on_click=None):
+    def nav_item(icon: str, label: str, route=None, active=False):
         return ft.GestureDetector(
-            on_tap=on_click or (lambda e: None),
+            on_tap=lambda e: page.go(route) if route else None,
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=2,
                 controls=[
-                    ft.Image(src=icon, width=24, height=24),
-                    ft.Text(label, size=10, color=BRAND_ORANGE if active else Colors.BLACK87),
+                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
                 ],
             ),
         )
@@ -290,17 +277,18 @@ def build_home_view(page: ft.Page) -> ft.View:
         content=ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_AROUND,
             controls=[
-                nav_item("home.png", "Home", active=True),
-                nav_item("history.png", "History"),
-                nav_item("review.png", "Review"),
-                nav_item("more.png", "More"),
+                nav_item("home.png", "Home", route="/home", active=True),
+                nav_item("heart.png", "Favorite", route="/favorite"),
+                nav_item("review.png", "Review", route="/review"),
+                nav_item("more.png", "More", route="/more"),
             ],
         ),
     )
 
-    # ---------- เนื้อหา ----------
-    body = ft.Column(
+    # ---------- เนื้อหา + ตรึง bottom nav ----------
+    scroll_area = ft.Column(
         spacing=12,
+        scroll=ft.ScrollMode.ALWAYS,
         controls=[
             header,
             top_buttons,
@@ -309,8 +297,14 @@ def build_home_view(page: ft.Page) -> ft.View:
             highlight_banner,
             horo_title,
             horo_scroller,
-            ft.Container(expand=True),
-            bottom_nav,
+            ft.Container(height=80),  # เผื่อพื้นที่ปุ่มล่าง
+        ],
+    )
+
+    layout = ft.Stack(
+        controls=[
+            scroll_area,
+            ft.Container(bottom=0, left=0, right=0, content=bottom_nav),
         ],
     )
 
@@ -331,7 +325,7 @@ def build_home_view(page: ft.Page) -> ft.View:
         height=PHONE_H,
         controls=[
             orange_gradient_bg,
-            ft.Container(padding=ft.padding.symmetric(horizontal=12, vertical=10), content=body),
+            ft.Container(padding=ft.padding.symmetric(horizontal=12, vertical=10), content=layout),
         ],
     )
 
@@ -341,12 +335,12 @@ def build_home_view(page: ft.Page) -> ft.View:
         controls=[
             ft.Container(
                 expand=True,
-                bgcolor=Colors.BLACK,
+                bgcolor=ft.Colors.BLACK,
                 alignment=ft.alignment.center,
                 content=ft.Container(
                     width=PHONE_W,
                     height=PHONE_H,
-                    bgcolor=Colors.WHITE,
+                    bgcolor=ft.Colors.WHITE,
                     content=phone_frame,
                 ),
             )

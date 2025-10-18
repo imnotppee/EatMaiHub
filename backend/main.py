@@ -1,153 +1,87 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import RedirectResponse, JSONResponse
-from pydantic import BaseModel
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-import requests
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 import os
-from dotenv import load_dotenv
 
-# ==== LOCAL IMPORTS ====
-from database import SessionLocal, engine
-# 🔥 เพิ่มตรงนี้
+# -------------------- Database & ORM --------------------
+from database import engine, Base, get_conn
 from models import (
-    Base,
-    User,
-    Restaurant,
-    Category,
-    Menu,
-    Review,
-    Favorite,
-    History,
-    ZodiacRecommendation,
+    User, Restaurant, Category, Menu,
+    Review, History, Favorite, ZodiacRecommendation, OTPCode
 )
 
-# โหลดค่า environment variables
-load_dotenv()
+# -------------------- Components --------------------
+from component import (
+    auth_component,
+    categories_component,
+    signup_component,
+    login_component,
+    forgotpass_component,
+    otp_component
+)
 
-# ==== INITIALIZE APP ====
-app = FastAPI()
+from component.auth_component import router as auth_router
+from component.horoscope_component import router as horoscope_router
+from component.eat_by_color import register_eat_by_color_routes
+from component.highlight_component import register_highlight_routes
+from component.sunbae_component import register_sunbae_routes
+from component.urban_street_component import register_urban_street_routes
+from component.favorite2_component import register_favorite_routes
+from component.review2_component import register_review_routes
 
-# ✅ (DEV MODE) ลบตารางเก่าก่อนสร้างใหม่ (กัน foreign key error)
-# ⚠️ ทำเฉพาะตอนพัฒนา ห้ามใช้ใน production
-Base.metadata.drop_all(bind=engine)
-
-# ✅ สร้างตารางอัตโนมัติ ถ้ายังไม่มี
+# -------------------- ⚙️ Database Init --------------------
 Base.metadata.create_all(bind=engine)
 
+# -------------------- 🚀 FastAPI Application --------------------
+app = FastAPI(
+    title="EatMaiHub Backend API",
+    version="1.0",
+    description="🍱 Backend API for EatMaiHub Application"
+)
 
-# ==== ROUTES ====
+# -------------------- Static Files --------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+static_path = os.path.join(BASE_DIR, "static")
+images_path = os.path.join(static_path, "images")
 
+# ✅ สร้างโฟลเดอร์ถ้ายังไม่มี เพื่อกัน error ตอน Render build
+os.makedirs(images_path, exist_ok=True)
+
+# ✅ เสิร์ฟ static และ images
+app.mount("/static", StaticFiles(directory=static_path), name="static")
+app.mount("/images", StaticFiles(directory=images_path), name="images")
+
+# -------------------- Register Routers --------------------
+# Auth & OAuth
+app.include_router(auth_component.router)
+app.include_router(auth_router)
+app.include_router(horoscope_router)
+
+# Categories
+app.include_router(categories_component.router)
+
+# Signup / Login / OTP / Forgot Password
+app.include_router(signup_component.router)
+app.include_router(login_component.router)
+app.include_router(forgotpass_component.router)
+app.include_router(otp_component.router)
+
+# Components using get_conn
+register_eat_by_color_routes(app, get_conn)
+register_highlight_routes(app, get_conn)
+register_sunbae_routes(app, get_conn)
+register_urban_street_routes(app, get_conn)
+register_favorite_routes(app, get_conn)
+register_review_routes(app, get_conn)
+
+# -------------------- Root Endpoint --------------------
 @app.get("/")
 def home():
     return {"message": "EatMaiHub Backend is running 🚀"}
 
+# -------------------- Entry Point สำหรับ Render --------------------
+if __name__ == "__main__":
+    import uvicorn
 
-# ------------------ GOOGLE OAUTH ------------------
-
-@app.get("/auth/google/login")
-def login_with_google():
-    auth_url = (
-        f"https://accounts.google.com/o/oauth2/v2/auth"
-        f"?client_id={os.getenv('GOOGLE_CLIENT_ID')}"
-        f"&redirect_uri={os.getenv('REDIRECT_URI')}"
-        f"&response_type=code"
-        f"&scope=openid%20email%20profile"
-    )
-    return RedirectResponse(auth_url)
-
-
-@app.get("/auth/google/callback")
-def google_callback(request: Request, code: str):
-    try:
-        token_res = requests.post(
-            "https://oauth2.googleapis.com/token",
-            data={
-                "code": code,
-                "client_id": os.getenv("GOOGLE_CLIENT_ID"),
-                "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
-                "redirect_uri": os.getenv("REDIRECT_URI"),
-                "grant_type": "authorization_code",
-            },
-        )
-        token_json = token_res.json()
-        access_token = token_json.get("access_token")
-
-        user_info_res = requests.get(
-            "https://www.googleapis.com/oauth2/v1/userinfo",
-            params={"access_token": access_token},
-        )
-        user_info = user_info_res.json()
-
-        db = SessionLocal()
-        existing_user = db.query(User).filter(User.email == user_info["email"]).first()
-
-        if not existing_user:
-            new_user = User(
-                username=user_info.get("name"),
-                email=user_info.get("email"),
-                password="",
-            )
-            db.add(new_user)
-            db.commit()
-            db.refresh(new_user)
-            db.close()
-            return JSONResponse(content={"message": "🎉 New user added!", "user": user_info})
-        else:
-            db.close()
-            return JSONResponse(content={"message": "👋 Welcome back!", "user": user_info})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"OAuth failed: {str(e)}")
-
-
-# ------------------ TEST DATABASE ------------------
-
-@app.get("/test-db")
-def test_database():
-    try:
-        db = SessionLocal()
-        db.execute(text("SELECT 1"))
-        db.close()
-        return {"message": "✅ Database connection successful!"}
-    except Exception as e:
-        return {"error": f"❌ Database connection failed: {str(e)}"}
-
-
-# ------------------ CRUD TEST ------------------
-
-class UserCreate(BaseModel):
-    username: str
-    password: str
-    email: str
-
-
-@app.post("/add-user")
-def add_user(user: UserCreate):
-    db = SessionLocal()
-    new_user = User(username=user.username, password=user.password, email=user.email)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    db.close()
-    return {"message": "✅ User added successfully!", "user": {"id": new_user.user_id, "username": new_user.username}}
-
-
-@app.get("/get-users")
-def get_users():
-    db = SessionLocal()
-    users = db.query(User).all()
-    db.close()
-    return {"users": [{"id": u.user_id, "username": u.username, "email": u.email} for u in users]}
-
-
-@app.delete("/delete-user/{user_id}")
-def delete_user(user_id: int):
-    db = SessionLocal()
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if user:
-        db.delete(user)
-        db.commit()
-        db.close()
-        return {"message": "🗑️ User deleted!"}
-    db.close()
-    return {"error": "❌ User not found"}
+    # ✅ ใช้ PORT จาก environment variable (Render จะกำหนดให้)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)

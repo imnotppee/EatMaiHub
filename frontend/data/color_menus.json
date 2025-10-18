@@ -1,0 +1,44 @@
+{
+  "red": [
+    {"name": "แกงเผ็ดไก่", "image": "images/red_curry.jpg"},
+    {"name": "ส้มตำไทย", "image": "images/somtam.jpg"},
+    {"name": "ต้มยำกุ้ง", "image": "images/tomyum.jpg"},
+    {"name": "น้ำแตงโมปั่น", "image": "images/watermelon.jpg"}
+  ],
+  "yellow": [
+    {"name": "ข้าวมันไก่", "image": "images/chicken_rice.jpg"},
+    {"name": "ข้าวผัดปู", "image": "images/friedrice.jpg"},
+    {"name": "หมี่เหลืองผัดซีอิ๊ว", "image": "images/noodle.jpg"},
+    {"name": "เค้กมะม่วง", "image": "images/mango_cake.jpg"}
+  ],
+  "pink": [
+    {"name": "เค้กสตรอว์เบอร์รี่", "image": "images/strawberry_cake.jpg"},
+    {"name": "บัวลอยเผือก", "image": "images/bualoy.jpg"},
+    {"name": "นมชมพู", "image": "images/pink_milk.jpg"},
+    {"name": "สตรอว์เบอร์รี่โยเกิร์ต", "image": "images/strawberry_yogurt.jpg"}
+  ],
+  "green": [
+    {"name": "แกงเขียวหวานไก่", "image": "images/green_curry.jpg"},
+    {"name": "สลัดผักอโวคาโด", "image": "images/salad.jpg"},
+    {"name": "ชาเขียวมัทฉะเย็น", "image": "images/greentea.jpg"},
+    {"name": "เค้กชาเขียว", "image": "images/greencake.jpg"}
+  ],
+  "orange": [
+    {"name": "ส้มตำปูปลาร้า", "image": "images/somtam_papaya.jpg"},
+    {"name": "น้ำส้มคั้น", "image": "images/orange_juice.jpg"},
+    {"name": "ข้าวผัดกุ้ง", "image": "images/shrimp_friedrice.jpg"},
+    {"name": "เค้กส้ม", "image": "images/orange_cake.jpg"}
+  ],
+  "blue": [
+    {"name": "บลูเบอร์รี่ชีสเค้ก", "image": "images/blueberrycake.jpg"},
+    {"name": "น้ำอัญชันมะนาว", "image": "images/butterflypea.jpg"},
+    {"name": "พุดดิ้งบลูเบอร์รี่", "image": "images/blueberrypudding.jpg"},
+    {"name": "ไอศกรีมวนิลา", "image": "images/vanilla.jpg"}
+  ],
+  "purple": [
+    {"name": "ข้าวเหนียวเปียกเผือก", "image": "images/taro_sticky_rice.jpg"},
+    {"name": "เผือกหิมะ", "image": "images/taro_ball.jpg"},
+    {"name": "เค้กมันม่วง", "image": "images/purple_cake.jpg"},
+    {"name": "น้ำองุ่น", "image": "images/grape_juice.jpg"}
+  ]
+}

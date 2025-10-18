@@ -2,6 +2,7 @@ import flet as ft
 import json
 import os
 import random
+from flet import Colors
 
 # ---------- ค่าคงที่ ----------
 BRAND_ORANGE = "#DC7A00"
@@ -44,26 +45,12 @@ def build_nearby_view(page: ft.Page) -> ft.View:
         ),
     )
 
-    # ---------- ปุ่มระบุตำแหน่ง (จำลองตำแหน่ง) ----------
+    # ---------- ปุ่มระบุตำแหน่ง ----------
     async def get_location(e):
-        """
-        ✅ Desktop: ใช้พิกัดจำลอง (KMITL)
-        ✅ Web: ถ้ามี page.get_geolocation() ก็ใช้จริงได้
-        ✅ Backend: ภายหลังสามารถต่อ Google API ได้ที่นี่
-        """
         try:
-            if hasattr(page, "get_geolocation"):
-                pos = await page.get_geolocation()
-                if pos:
-                    msg = f"📍 ตำแหน่งจริงของคุณ\nLat: {pos.latitude:.4f}, Lng: {pos.longitude:.4f}"
-                else:
-                    msg = "⚠️ ไม่สามารถดึงตำแหน่งจริงได้"
-            else:
-                # จำลองพิกัดมหาลัยลาดกระบัง
-                fake_lat = 13.7276 + random.uniform(-0.002, 0.002)
-                fake_lng = 100.7772 + random.uniform(-0.002, 0.002)
-                msg = f"📍 ตำแหน่งจำลอง: KMITL\nLat: {fake_lat:.4f}, Lng: {fake_lng:.4f}"
-
+            fake_lat = 13.7276 + random.uniform(-0.002, 0.002)
+            fake_lng = 100.7772 + random.uniform(-0.002, 0.002)
+            msg = f"📍 ตำแหน่งจำลอง: KMITL\nLat: {fake_lat:.4f}, Lng: {fake_lng:.4f}"
             page.snack_bar = ft.SnackBar(content=ft.Text(msg), bgcolor=BRAND_ORANGE, duration=3000)
             page.snack_bar.open = True
             await page.update_async()
@@ -119,25 +106,71 @@ def build_nearby_view(page: ft.Page) -> ft.View:
 
     # ---------- รายการร้าน ----------
     restaurant_list = ft.Column(
-        scroll=ft.ScrollMode.ALWAYS,
         controls=[restaurant_card(r) for r in sorted(restaurants, key=lambda x: x["distance"])],
     )
 
-    # ---------- รวมเนื้อหา ----------
-    content_area = ft.Container(
-        padding=ft.padding.symmetric(horizontal=16, vertical=10),
-        content=ft.Column(spacing=12, controls=[locate_button, restaurant_list]),
-    )
-
-    # ---------- Body ----------
-    body = ft.Container(
-        width=PHONE_W,
-        height=PHONE_H,
+    # ---------- โซน scroll ----------
+    scrollable_content = ft.Container(
+        expand=True,
         bgcolor=ft.Colors.WHITE,
         content=ft.Column(
-            scroll=ft.ScrollMode.ALWAYS,
-            controls=[header, title, content_area],
+            scroll=ft.ScrollMode.AUTO,
+            controls=[
+                header,
+                title,
+                ft.Container(
+                    padding=ft.padding.symmetric(horizontal=16),
+                    content=locate_button,
+                ),
+                ft.Container(
+                    padding=ft.padding.symmetric(horizontal=16, vertical=10),
+                    content=restaurant_list,
+                ),
+            ],
         ),
+    )
+
+    # ---------- Bottom Navigation ----------
+    def nav_item(icon: str, label: str, route=None, active=False):
+        return ft.GestureDetector(
+            on_tap=lambda e: page.go(route) if route else None,
+            content=ft.Column(
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=2,
+                controls=[
+                    ft.Container(
+                        content=ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                        padding=ft.padding.only(top=2, bottom=2),
+                    ),
+                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
+                ],
+            ),
+        )
+
+    bottom_nav = ft.Container(
+        bgcolor=ft.Colors.WHITE,
+        border=ft.border.only(top=ft.BorderSide(1, ft.Colors.BLACK12)),
+        padding=10,
+        height=65,
+        content=ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_AROUND,
+            controls=[
+                nav_item("home.png", "Home", route="/home"),
+                nav_item("heart.png", "Favorite", route="/favorite"),
+                nav_item("review.png", "Review"),
+                nav_item("more.png", "More"),
+            ],
+        ),
+    )
+
+    # ---------- Layout รวม ----------
+    layout = ft.Column(
+        expand=True,
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        controls=[
+            ft.Container(expand=True, content=scrollable_content),
+            bottom_nav,
+        ],
     )
 
     return ft.View(
@@ -148,7 +181,12 @@ def build_nearby_view(page: ft.Page) -> ft.View:
                 expand=True,
                 bgcolor=ft.Colors.BLACK,
                 alignment=ft.alignment.center,
-                content=ft.Container(width=PHONE_W, height=PHONE_H, bgcolor=ft.Colors.WHITE, content=body),
+                content=ft.Container(
+                    width=PHONE_W,
+                    height=PHONE_H,
+                    bgcolor=ft.Colors.WHITE,
+                    content=layout,
+                ),
             )
         ],
     )

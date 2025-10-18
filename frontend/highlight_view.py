@@ -1,16 +1,20 @@
 import flet as ft
-import json
-import os
+import requests  # ✅ เพิ่มเพื่อดึงข้อมูลจาก backend
+from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
-
+API_URL = "http://127.0.0.1:8000/api/highlights"  # ✅ URL backend
 
 def build_highlight_view(page: ft.Page) -> ft.View:
-    # ---------- โหลดข้อมูลร้านจาก highlight.json ----------
-    data_path = os.path.join(os.path.dirname(__file__), "data", "highlight.json")
-    with open(data_path, "r", encoding="utf-8") as f:
-        restaurants = json.load(f)
+    # ---------- โหลดข้อมูลร้านจาก Database ผ่าน API ----------
+    try:
+        res = requests.get(API_URL, timeout=5)
+        res.raise_for_status()
+        restaurants = res.json()
+    except Exception as e:
+        print("❌ โหลดข้อมูลร้านเด็ดไม่สำเร็จ:", e)
+        restaurants = []  # fallback ถ้าโหลดไม่ได้
 
     # ---------- Header ----------
     header_row = ft.Row(
@@ -98,24 +102,23 @@ def build_highlight_view(page: ft.Page) -> ft.View:
     for r in restaurants:
         name_lower = r["name"].lower()
 
-        if "urban" in name_lower:
-            route = "/urban"
-        elif "sunbae" in name_lower:
+        if "sunbae" in name_lower:
             route = "/sunbae"
-        elif "hotto bun" in name_lower:
+        elif "urban" in name_lower:
+            route = "/urban"
+        elif "hotto" in name_lower:
             route = "/hottobun"
         else:
             route = None
+
 
         restaurant_list.controls.append(
             restaurant_card(r["image"], r["name"], r["desc"], route)
         )
 
-    # ---------- เนื้อหาหลัก ----------
-    body = ft.Container(
-        width=PHONE_W,
-        height=PHONE_H,
-        bgcolor=ft.Colors.WHITE,
+    # ---------- เนื้อหาหลัก (scroll ได้) ----------
+    scrollable_content = ft.Container(
+        expand=True,
         content=ft.Column(
             scroll=ft.ScrollMode.ALWAYS,
             controls=[
@@ -131,12 +134,44 @@ def build_highlight_view(page: ft.Page) -> ft.View:
         ),
     )
 
-    # ---------- Frame ----------
-    phone_frame = ft.Container(
-        width=PHONE_W,
-        height=PHONE_H,
-        bgcolor=ft.Colors.WHITE,
-        content=body,
+    # ---------- Bottom Navigation ----------
+    def nav_item(icon: str, label: str, route=None, active=False):
+        return ft.GestureDetector(
+            on_tap=lambda e: page.go(route) if route else None,
+            content=ft.Column(
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=2,
+                controls=[
+                    ft.Image(src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN),
+                    ft.Text(label, size=10, color=BRAND_ORANGE if active else ft.Colors.BLACK87),
+                ],
+            ),
+        )
+
+    bottom_nav = ft.Container(
+        bgcolor=Colors.WHITE,
+        border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
+        padding=10,
+        height=65,
+        content=ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_AROUND,
+            controls=[
+                nav_item("home.png", "Home", route="/home"),
+                nav_item("heart.png", "Favorite", route="/favorite"),
+                nav_item("review.png", "Review"),
+                nav_item("more.png", "More"),
+            ],
+        ),
+    )
+
+    # ---------- Layout รวม ----------
+    layout = ft.Column(
+        expand=True,
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        controls=[
+            scrollable_content,
+            bottom_nav,
+        ],
     )
 
     return ft.View(
@@ -147,7 +182,12 @@ def build_highlight_view(page: ft.Page) -> ft.View:
                 expand=True,
                 bgcolor=ft.Colors.BLACK,
                 alignment=ft.alignment.center,
-                content=phone_frame,
+                content=ft.Container(
+                    width=PHONE_W,
+                    height=PHONE_H,
+                    bgcolor=ft.Colors.WHITE,
+                    content=layout,
+                ),
             )
         ],
     )

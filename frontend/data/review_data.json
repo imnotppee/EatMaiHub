@@ -1,0 +1,76 @@
+{
+  "reviews": [
+    {
+      "restaurant": "Urban Street",
+      "image": "photo/urban_banner.png",
+      "is_eaten": true,
+      "is_reviewed": true,
+      "stars": 5,
+      "comment": "รสชาติดี ให้เยอะ คุ้มค่ากับราคา",
+      "timestamp": "2025-10-14 00:30:00"
+    },
+    {
+      "restaurant": "Hotto Bun",
+      "image": "photo/hottobun.png",
+      "is_eaten": true,
+      "is_reviewed": false,
+      "stars": 0,
+      "comment": "",
+      "timestamp": "2025-10-14 00:31:00"
+    },
+    {
+      "restaurant": "ร้านนายพล จุ่มแซ่บ",
+      "image": "photo/naypol.png",
+      "is_eaten": false,
+      "is_reviewed": false,
+      "stars": 0,
+      "comment": "",
+      "timestamp": "2025-10-14 00:32:00"
+    },
+    {
+      "restaurant": "Urban Street สเต็กถาดปราบเซียน",
+      "image": "banner.png",
+      "is_eaten": true,
+      "is_reviewed": true,
+      "stars": 3,
+      "comment": "เยี่ยม",
+      "timestamp": "2025-10-14 00:45:00"
+    },
+    {
+      "restaurant": "Urban Street สเต็กถาดปราบเซียน",
+      "image": "banner.png",
+      "is_eaten": true,
+      "is_reviewed": true,
+      "stars": 3,
+      "comment": "เยี่ยม อร่อยมาก",
+      "timestamp": "2025-10-14 00:47:11"
+    },
+    {
+      "restaurant": "Urban Street สเต็กถาดปราบเซียน",
+      "image": "banner.png",
+      "is_eaten": true,
+      "is_reviewed": true,
+      "stars": 1,
+      "comment": "กฟไ",
+      "timestamp": "2025-10-14 01:16:25"
+    },
+    {
+      "restaurant": "Sunbae Korean Restaurant",
+      "image": "banner2.png",
+      "is_eaten": true,
+      "is_reviewed": true,
+      "stars": 5,
+      "comment": "เกาหลีเกาหมี ชอบๆเลิฟๆ",
+      "timestamp": "2025-10-14 02:11:00"
+    },
+    {
+      "restaurant": "Hotto Bun ホットバン",
+      "image": "banner3.png",
+      "is_eaten": true,
+      "is_reviewed": true,
+      "stars": 5,
+      "comment": "ดีเลยล่ะ มีน้องหมาน้องแมว",
+      "timestamp": "2025-10-14 02:15:43"
+    }
+  ]
+}

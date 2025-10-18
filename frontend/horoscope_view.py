@@ -1,20 +1,29 @@
 import flet as ft
-import json
-import os
 import datetime
+import requests
+from flet import Colors
 
 BRAND_ORANGE = "#DC7A00"
 PHONE_W, PHONE_H = 412, 917
 
 
 def build_horoscope_view(page: ft.Page) -> ft.View:
-    # ---------- โหลดข้อมูลจาก JSON ----------
-    data_path = os.path.join(os.path.dirname(__file__), "data", "horoscope_foods.json")
-    if not os.path.exists(data_path):
-        raise FileNotFoundError("❌ ไม่พบไฟล์ data/horoscope_foods.json")
+    # ---------- โหลดข้อมูลจาก API ----------
+    API_URL = "http://127.0.0.1:8000/api/horoscope"  # ✅ backend port 8000
+    # ถ้า backend อยู่คนละเครื่อง เช่น IP 10.117.9.238 ให้ใช้:
+    # API_URL = "http://10.117.9.238:8000/api/horoscope"
 
-    with open(data_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    try:
+        response = requests.get(API_URL)
+        if response.status_code == 200:
+            data = response.json()
+            print("✅ โหลดข้อมูลจาก API สำเร็จ")
+        else:
+            print(f"❌ API error: {response.status_code}")
+            data = {}
+    except Exception as e:
+        print("❌ โหลดข้อมูลจาก API ไม่ได้:", e)
+        data = {}
 
     # ---------- ตรวจวันปัจจุบัน ----------
     weekday_map = {
@@ -24,7 +33,7 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
         3: ("Thursday", "วันพฤหัสบดี"),
         4: ("Friday", "วันศุกร์"),
         5: ("Saturday", "วันเสาร์"),
-        6: ("Sunday", "วันอาทิตย์")
+        6: ("Sunday", "วันอาทิตย์"),
     }
 
     weekday_index = datetime.datetime.now().weekday()
@@ -37,7 +46,7 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
         gradient=ft.LinearGradient(
             begin=ft.alignment.top_center,
             end=ft.alignment.bottom_center,
-            colors=["#E67E22", "#FAD7A0"]
+            colors=[BRAND_ORANGE, "#F6D0A0"],
         ),
         padding=ft.padding.only(left=16, right=16, top=30, bottom=16),
         content=ft.Column(
@@ -88,6 +97,11 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
 
     # ---------- การ์ดแสดงเมนู ----------
     def food_card(food):
+        image_url = food.get("image", "")
+        # ✅ กันกรณีรูปโหลดไม่ได้
+        if not image_url:
+            image_url = "http://127.0.0.1:8000/images/default.jpg"
+
         return ft.Container(
             width=PHONE_W - 40,
             bgcolor=ft.Colors.WHITE,
@@ -99,36 +113,92 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=8,
                 controls=[
-                    ft.Text(food["category"], size=15, weight=ft.FontWeight.BOLD, color=BRAND_ORANGE),
+                    ft.Text(
+                        food["category"],
+                        size=15,
+                        weight=ft.FontWeight.BOLD,
+                        color=BRAND_ORANGE,
+                    ),
                     ft.Container(
                         height=180,
                         width=PHONE_W - 80,
                         border_radius=12,
                         clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                        content=ft.Image(src=food["image"], fit=ft.ImageFit.COVER),
+                        content=ft.Image(src=image_url, fit=ft.ImageFit.COVER),
                     ),
                     ft.Text(food["title"], size=16, weight=ft.FontWeight.BOLD),
-                    ft.Text(food["subtitle"], size=12, text_align=ft.TextAlign.CENTER, color=ft.Colors.BLACK87),
+                    ft.Text(
+                        food["subtitle"],
+                        size=12,
+                        text_align=ft.TextAlign.CENTER,
+                        color=ft.Colors.BLACK87,
+                    ),
                 ],
             ),
         )
 
     food_list = [food_card(f) for f in today_foods]
 
-    # ---------- เนื้อหาหลัก ----------
-    body = ft.Container(
-        width=PHONE_W,
-        height=PHONE_H,
-        bgcolor=ft.Colors.WHITE,
+    # ---------- Scrollable Content ----------
+    scrollable_area = ft.Container(
+        expand=True,
         content=ft.Column(
             scroll=ft.ScrollMode.ALWAYS,
             controls=[
                 header,
                 ft.Container(padding=ft.padding.all(16), content=title_row),
-                ft.Container(padding=ft.padding.symmetric(horizontal=16), content=ft.Column(spacing=12, controls=food_list)),
-                ft.Container(height=40),
+                ft.Container(
+                    padding=ft.padding.symmetric(horizontal=16),
+                    content=ft.Column(spacing=12, controls=food_list),
+                ),
             ],
         ),
+    )
+
+    # ---------- Bottom Navigation ----------
+    def nav_item(icon: str, label: str, route=None, active=False):
+        return ft.GestureDetector(
+            on_tap=lambda e: page.go(route) if route else None,
+            content=ft.Column(
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=2,
+                controls=[
+                    ft.Image(
+                        src=icon, width=28, height=28, fit=ft.ImageFit.CONTAIN
+                    ),
+                    ft.Text(
+                        label,
+                        size=10,
+                        color=BRAND_ORANGE if active else ft.Colors.BLACK87,
+                    ),
+                ],
+            ),
+        )
+
+    bottom_nav = ft.Container(
+        bgcolor=Colors.WHITE,
+        border=ft.border.only(top=ft.BorderSide(1, Colors.BLACK12)),
+        padding=10,
+        height=65,
+        content=ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_AROUND,
+            controls=[
+                nav_item("home.png", "Home", route="/home"),
+                nav_item("heart.png", "Favorite", route="/favorite"),
+                nav_item("review.png", "Review"),
+                nav_item("more.png", "More"),
+            ],
+        ),
+    )
+
+    # ---------- Layout รวม ----------
+    layout = ft.Column(
+        expand=True,
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        controls=[
+            ft.Container(expand=True, content=scrollable_area),
+            bottom_nav,
+        ],
     )
 
     return ft.View(
@@ -137,13 +207,13 @@ def build_horoscope_view(page: ft.Page) -> ft.View:
         controls=[
             ft.Container(
                 expand=True,
-                bgcolor=ft.Colors.BLACK,
+                bgcolor=Colors.BLACK,
                 alignment=ft.alignment.center,
                 content=ft.Container(
                     width=PHONE_W,
                     height=PHONE_H,
-                    bgcolor=ft.Colors.WHITE,
-                    content=body,
+                    bgcolor=Colors.WHITE,
+                    content=layout,
                 ),
             )
         ],
